@@ -5,11 +5,14 @@ import { usePathname } from "next/navigation";
 import gsap from "gsap";
 import { ScrollTrigger } from "gsap/ScrollTrigger";
 import Lenis from "lenis";
+import { Crew, destroyDirector, onScroll, showCrew } from "./Crew";
+import { splitChars, splitWords } from "./split";
 
 gsap.registerPlugin(ScrollTrigger);
+export { splitChars, splitWords };
 
-type Ctx = { stop: () => void; start: () => void; scrollTo: (target: string | HTMLElement | number) => void };
-const MotionCtx = createContext<Ctx>({ stop() {}, start() {}, scrollTo() {} });
+type Ctx = { stop: () => void; start: () => void };
+const MotionCtx = createContext<Ctx>({ stop() {}, start() {} });
 export const useMotion = () => useContext(MotionCtx);
 
 /** Evento global: la pantalla de carga terminó y el hero puede animarse. */
@@ -33,50 +36,12 @@ export function markReady() {
 const isFine = () => window.matchMedia("(pointer: fine)").matches;
 const reduced = () => window.matchMedia("(prefers-reduced-motion: reduce)").matches;
 
-/** Parte un texto en palabras (con máscara) conservando <em>, <br>, etc. */
-export function splitWords(el: HTMLElement): HTMLElement[] {
-  if (el.dataset.splitDone) return Array.from(el.querySelectorAll<HTMLElement>(".wi"));
-  const walk = (node: Node) => {
-    Array.from(node.childNodes).forEach((n) => {
-      if (n.nodeType === 3) {
-        const frag = document.createDocumentFragment();
-        (n.textContent ?? "").split(/(\s+)/).forEach((p) => {
-          if (!p) return;
-          if (/^\s+$/.test(p)) return void frag.appendChild(document.createTextNode(" "));
-          const w = document.createElement("span");
-          w.className = "w";
-          const i = document.createElement("span");
-          i.className = "wi";
-          i.textContent = p;
-          w.appendChild(i);
-          frag.appendChild(w);
-        });
-        n.parentNode?.replaceChild(frag, n);
-      } else if (n.nodeType === 1 && (n as HTMLElement).tagName !== "BR") walk(n);
-    });
-  };
-  walk(el);
-  el.dataset.splitDone = "1";
-  return Array.from(el.querySelectorAll<HTMLElement>(".wi"));
-}
-
-export function splitChars(el: HTMLElement): HTMLElement[] {
-  const text = el.textContent ?? "";
-  el.textContent = "";
-  return Array.from(text).map((c) => {
-    const s = document.createElement("span");
-    s.className = "lc";
-    s.textContent = c === " " ? " " : c;
-    el.appendChild(s);
-    return s;
-  });
-}
-
 export default function MotionRoot({ children }: { children: ReactNode }) {
   const lenisRef = useRef<Lenis | null>(null);
+  const layerRef = useRef<HTMLDivElement>(null);
   const pathname = usePathname();
 
-  // ---- Desplazamiento suave + cursor + barra de progreso (una sola vez) ----
+  // ---- Desplazamiento suave + barra de progreso (una sola vez) ----
   useEffect(() => {
     const lenis = reduced() ? null : new Lenis({ duration: 1.1, smoothWheel: true, easing: (t) => Math.min(1, 1.001 - Math.pow(2, -10 * t)) });
     lenisRef.current = lenis;
@@ -104,53 +69,17 @@ export default function MotionRoot({ children }: { children: ReactNode }) {
     };
     document.addEventListener("click", onClick, true);
 
-    // Barra de progreso de lectura.
     const prog = document.querySelector<HTMLElement>(".progress");
     const progTween = prog ? gsap.to(prog, { scaleX: 1, ease: "none", scrollTrigger: { start: 0, end: "max", scrub: 0.3 } }) : null;
-
-    // Cursor personalizado (solo con mouse).
-    let cleanupCursor = () => {};
-    if (isFine()) {
-      const dot = document.querySelector<HTMLElement>(".cur-dot");
-      const ring = document.querySelector<HTMLElement>(".cur-ring");
-      if (dot && ring) {
-        document.body.classList.add("has-cursor");
-        gsap.set([dot, ring], { x: innerWidth / 2, y: innerHeight / 2, opacity: 0 });
-        const dx = gsap.quickTo(dot, "x", { duration: 0.08 }), dy = gsap.quickTo(dot, "y", { duration: 0.08 });
-        const rx = gsap.quickTo(ring, "x", { duration: 0.45, ease: "power3" }), ry = gsap.quickTo(ring, "y", { duration: 0.45, ease: "power3" });
-        const move = (e: PointerEvent) => {
-          if (e.pointerType !== "mouse") return;
-          dx(e.clientX); dy(e.clientY); rx(e.clientX); ry(e.clientY);
-          gsap.to([dot, ring], { opacity: 1, duration: 0.2, overwrite: "auto" });
-        };
-        const over = (e: Event) => {
-          const t = e.target as HTMLElement;
-          const view = t.closest("[data-cursor='view']");
-          const hov = t.closest("a,button,input,textarea,select,label,[data-tilt]");
-          document.body.classList.toggle("cur-view", !!view);
-          document.body.classList.toggle("cur-hover", !view && !!hov);
-        };
-        const leave = () => gsap.to([dot, ring], { opacity: 0, duration: 0.2 });
-        addEventListener("pointermove", move, { passive: true });
-        document.addEventListener("pointerover", over);
-        document.documentElement.addEventListener("pointerleave", leave);
-        cleanupCursor = () => {
-          removeEventListener("pointermove", move);
-          document.removeEventListener("pointerover", over);
-          document.documentElement.removeEventListener("pointerleave", leave);
-          document.body.classList.remove("has-cursor", "cur-view", "cur-hover");
-        };
-      }
-    }
 
     return () => {
       document.removeEventListener("click", onClick, true);
       progTween?.scrollTrigger?.kill();
       progTween?.kill();
-      cleanupCursor();
       if (lenis) gsap.ticker.remove(tick);
       lenis?.destroy();
       lenisRef.current = null;
+      destroyDirector();
     };
   }, []);
 
@@ -158,16 +87,56 @@ export default function MotionRoot({ children }: { children: ReactNode }) {
   useEffect(() => {
     lenisRef.current?.scrollTo(0, { immediate: true });
     const fine = isFine();
+    const layer = layerRef.current;
     const cleanups: Array<() => void> = [];
-    const ctx = gsap.context(() => {
-      // Títulos que aparecen palabra por palabra.
-      document.querySelectorAll<HTMLElement>("[data-split]").forEach((el) => {
-        const words = splitWords(el);
-        gsap.from(words, { yPercent: 115, rotate: 4, duration: 1.25, stagger: 0.06, ease: "expo.out", scrollTrigger: { trigger: el, start: "top 88%" } });
-      });
+    // El hero usa los 3 primeros miembros del equipo; las secciones siguen desde el 4.º.
+    const crew = layer ? new Crew(layer, 3) : null;
 
-      // Bloques que suben al entrar en pantalla (en grupos, con desfase).
-      const reveals = gsap.utils.toArray<HTMLElement>("[data-reveal]");
+    const ctx = gsap.context(() => {
+      const crewOwned = (el: Element) => el.closest("[data-crew]") !== null && (el as HTMLElement).dataset.crew !== undefined;
+
+      // ---- El equipo de punteros construye cada sección al bajar ----
+      if (crew) {
+        // Palabra grande (se escribe) + texto manuscrito (se firma).
+        document.querySelectorAll<HTMLElement>(".stitle").forEach((t) => {
+          const main = t.querySelector<HTMLElement>(".stitle-main");
+          const script = t.querySelector<HTMLElement>(".stitle-script");
+          if (main) crew.type(main, onScroll(t, "top 92%", "top 52%"));
+          if (script) crew.sign(script, onScroll(t, "top 72%", "top 38%"));
+        });
+        // Títulos en serif (ej. página de un proyecto).
+        document.querySelectorAll<HTMLElement>("[data-split]").forEach((el) => crew.write(el, onScroll(el, "top 92%", "top 58%")));
+
+        document.querySelectorAll<HTMLElement>("[data-crew]").forEach((el, i) => {
+          const kind = el.dataset.crew;
+          const lag = (i % 3) * 4; // tarjetas de una misma fila: arrancan escalonadas
+          const st = onScroll(el, `top ${90 - lag}%`, `top ${45 - lag}%`);
+          if (kind === "stretch") crew.stretch(el, Number(el.dataset.radius ?? 22), st);
+          else if (kind === "drag-left") crew.drag(el, "left", st);
+          else if (kind === "drag-right") crew.drag(el, "right", st);
+          else if (kind === "select") crew.select(el, st);
+        });
+
+        // Cifras: un clic y cuentan.
+        document.querySelectorAll<HTMLElement>("[data-count]").forEach((el) => {
+          crew.count(el, Number(el.dataset.count) || 0, el.dataset.suffix ?? "", onScroll(el, "top 92%", "top 62%"));
+        });
+        // Barras de habilidades: se arrastran hasta su nivel.
+        document.querySelectorAll<HTMLElement>("[data-skill]").forEach((el, i) => {
+          crew.fill(el, Number(el.dataset.skill) || 0, onScroll(el, `top ${92 - i * 3}%`, `top ${60 - i * 3}%`));
+        });
+        // Línea del proceso.
+        document.querySelectorAll<HTMLElement>("[data-steps]").forEach((wrap) => {
+          const fill = wrap.querySelector<HTMLElement>(".steps-fill");
+          if (fill && getComputedStyle(fill.parentElement!).display !== "none") crew.draw(fill, onScroll(wrap, "top 75%", "bottom 60%"));
+          wrap.querySelectorAll<HTMLElement>(".step").forEach((s, i) => {
+            ScrollTrigger.create({ trigger: wrap, start: `top ${74 - i * 3}%`, onEnter: () => s.classList.add("on"), onLeaveBack: () => s.classList.remove("on") });
+          });
+        });
+      }
+
+      // ---- Lo demás aparece con un deslizamiento suave ----
+      const reveals = gsap.utils.toArray<HTMLElement>("[data-reveal]").filter((el) => !crewOwned(el));
       gsap.set(reveals, { y: 46, opacity: 0 });
       ScrollTrigger.batch(reveals, {
         start: "top 90%",
@@ -175,29 +144,10 @@ export default function MotionRoot({ children }: { children: ReactNode }) {
         onEnter: (b) => gsap.to(b, { y: 0, opacity: 1, duration: 1.1, stagger: 0.09, ease: "expo.out", overwrite: true }),
       });
 
-      // Contadores.
-      document.querySelectorAll<HTMLElement>("[data-count]").forEach((el) => {
-        const target = Number(el.dataset.count) || 0;
-        const suffix = el.dataset.suffix ?? "";
-        const o = { v: 0 };
-        el.textContent = `0${suffix}`;
-        ScrollTrigger.create({
-          trigger: el, start: "top 92%", once: true,
-          onEnter: () => gsap.to(o, { v: target, duration: 2.2, ease: "power3.out", onUpdate: () => { el.textContent = `${Math.round(o.v)}${suffix}`; } }),
-        });
-      });
-
-      // Barras de habilidades.
-      document.querySelectorAll<HTMLElement>("[data-skill]").forEach((el, i) => {
-        gsap.from(el, { width: 0, duration: 1.8, delay: 0.12 * i, ease: "expo.out", scrollTrigger: { trigger: el, start: "top 92%" } });
-      });
-
-      // Parallax suave en imágenes.
       document.querySelectorAll<HTMLElement>("[data-parallax]").forEach((el) => {
         gsap.fromTo(el, { yPercent: -6 }, { yPercent: 6, ease: "none", scrollTrigger: { trigger: el.parentElement ?? el, start: "top bottom", end: "bottom top", scrub: true } });
       });
 
-      // Marquesina infinita que reacciona a la velocidad del scroll.
       document.querySelectorAll<HTMLElement>("[data-marquee]").forEach((track) => {
         const tw = gsap.to(track, { xPercent: -50, duration: 34, ease: "none", repeat: -1 });
         const skew = gsap.quickTo(track, "skewX", { duration: 0.5, ease: "power3" });
@@ -215,23 +165,13 @@ export default function MotionRoot({ children }: { children: ReactNode }) {
         });
       });
 
-      // Línea del proceso que se dibuja con el scroll.
-      document.querySelectorAll<HTMLElement>("[data-steps]").forEach((wrap) => {
-        const fill = wrap.querySelector(".steps-fill");
-        if (fill) gsap.fromTo(fill, { scaleX: 0 }, { scaleX: 1, ease: "none", scrollTrigger: { trigger: wrap, start: "top 75%", end: "bottom 55%", scrub: 0.6 } });
-        wrap.querySelectorAll<HTMLElement>(".step").forEach((s, i) => {
-          ScrollTrigger.create({ trigger: wrap, start: `top ${76 - i * 4}%`, onEnter: () => s.classList.add("on"), onLeaveBack: () => s.classList.remove("on") });
-        });
-      });
-
-      // Nombre gigante del pie.
       document.querySelectorAll<HTMLElement>("[data-bigname]").forEach((el) => {
         const chars = splitChars(el);
         gsap.from(chars, { yPercent: 100, opacity: 0, stagger: 0.05, duration: 1.4, ease: "expo.out", scrollTrigger: { trigger: el, start: "top 96%" } });
       });
     });
 
-    // Tarjetas con inclinación 3D y luz que sigue al puntero.
+    // Inclinación 3D y luz que sigue al puntero (solo con mouse).
     document.querySelectorAll<HTMLElement>("[data-tilt]").forEach((card) => {
       const move = (e: PointerEvent) => {
         const r = card.getBoundingClientRect();
@@ -246,7 +186,6 @@ export default function MotionRoot({ children }: { children: ReactNode }) {
       cleanups.push(() => { card.removeEventListener("pointermove", move); card.removeEventListener("pointerleave", leave); });
     });
 
-    // Botones magnéticos.
     if (fine) {
       document.querySelectorAll<HTMLElement>("[data-magnetic]").forEach((el) => {
         const xTo = gsap.quickTo(el, "x", { duration: 0.6, ease: "power3" }), yTo = gsap.quickTo(el, "y", { duration: 0.6, ease: "power3" });
@@ -262,9 +201,14 @@ export default function MotionRoot({ children }: { children: ReactNode }) {
       });
     }
 
+    // Sin pantalla de carga (otras páginas o visita repetida), el equipo entra de una vez.
+    if (!document.querySelector(".loader")) markReady();
+    cleanups.push(onReady(showCrew));
+
     const refresh = () => ScrollTrigger.refresh();
     const t = setTimeout(refresh, 400);
     window.addEventListener("load", refresh);
+    document.fonts?.ready.then(refresh).catch(() => {});
     if (location.hash) {
       const target = document.querySelector<HTMLElement>(location.hash);
       if (target) setTimeout(() => lenisRef.current?.scrollTo(target, { offset: -70, immediate: true }), 60);
@@ -273,25 +217,21 @@ export default function MotionRoot({ children }: { children: ReactNode }) {
       clearTimeout(t);
       window.removeEventListener("load", refresh);
       cleanups.forEach((c) => c());
+      crew?.destroy();
       ctx.revert();
     };
   }, [pathname]);
 
-  const api: Ctx = {
-    stop: () => lenisRef.current?.stop(),
-    start: () => lenisRef.current?.start(),
-    scrollTo: (target) => {
-      if (lenisRef.current) lenisRef.current.scrollTo(target as HTMLElement, { offset: -70 });
-    },
-  };
+  const api: Ctx = { stop: () => lenisRef.current?.stop(), start: () => lenisRef.current?.start() };
 
   return (
     <MotionCtx.Provider value={api}>
       <div className="progress" aria-hidden="true" />
       <div className="grain" aria-hidden="true" />
-      <div className="cur-dot" aria-hidden="true" />
-      <div className="cur-ring" aria-hidden="true"><span>Ver</span></div>
-      {children}
+      <div className="page-wrap">
+        <div className="crew" ref={layerRef} aria-hidden="true" />
+        {children}
+      </div>
     </MotionCtx.Provider>
   );
 }

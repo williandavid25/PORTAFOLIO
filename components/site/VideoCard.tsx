@@ -34,7 +34,7 @@ export default function VideoCard({ project, videoUrl, thumbUrl, tall }: Props) 
   }, []);
 
   return (
-    <Link href={`/portafolio/${project.slug}`} className={`vcard${tall ? " tall" : ""}${playing ? " playing" : ""}`} ref={cardRef} data-cursor="view" data-reveal>
+    <Link href={`/portafolio/${project.slug}`} className={`vcard${tall ? " tall" : ""}${playing ? " playing" : ""}`} ref={cardRef} data-crew="stretch">
       {thumbUrl ? (
         // eslint-disable-next-line @next/next/no-img-element
         <img src={thumbUrl} alt="" loading="lazy" decoding="async" />

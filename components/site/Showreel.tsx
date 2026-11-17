@@ -2,8 +2,8 @@
 
 import Link from "next/link";
 import { useEffect, useRef } from "react";
-import gsap from "gsap";
 import Icon from "./Icon";
+import SectionTitle from "./SectionTitle";
 import { CATEGORIES, type Project } from "@/lib/content";
 
 /** Vista previa grande del proyecto destacado: se reproduce sola (sin sonido) al verse. */
@@ -21,18 +21,14 @@ export default function Showreel({ project, videoUrl, thumbUrl }: { project: Pro
       else v.pause();
     }, { threshold: 0.25 });
     io.observe(box);
-    const tw = gsap.fromTo(box, { clipPath: "inset(12% 8% 12% 8% round 28px)" }, { clipPath: "inset(0% 0% 0% 0% round 28px)", ease: "none", scrollTrigger: { trigger: box, start: "top 95%", end: "top 35%", scrub: true } });
-    return () => { io.disconnect(); tw.scrollTrigger?.kill(); tw.kill(); };
+    return () => io.disconnect();
   }, []);
 
   return (
     <section className="section" id="showreel" style={{ paddingTop: 40 }}>
       <div className="container">
-        <div className="sec-head center">
-          <div className="eyebrow center" data-reveal>Showreel</div>
-          <h2 className="title" data-split>Mi trabajo <em>en movimiento</em></h2>
-        </div>
-        <div className="reel" ref={ref} data-cursor={project ? "view" : undefined}>
+        <SectionTitle main="Showreel" script="en movimiento" center />
+        <div className="reel" ref={ref} data-crew="stretch" data-radius="28">
           {project ? (
             <>
               {videoUrl ? (

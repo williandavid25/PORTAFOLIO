@@ -41,6 +41,7 @@ body {
   -webkit-tap-highlight-color: transparent;
 }
 img, video { max-width: 100%; display: block; }
+.page-wrap { position: relative; overflow-x: clip; }
 main { overflow-x: clip; }
 a { color: inherit; text-decoration: none; }
 button { cursor: pointer; border: 0; background: none; color: inherit; font: inherit; }
@@ -52,7 +53,6 @@ input, textarea, select { font: inherit; color: inherit; }
 :focus-visible { outline: 2px solid var(--acc2); outline-offset: 3px; border-radius: 6px; }
 .sr-only { position: absolute; width: 1px; height: 1px; overflow: hidden; clip: rect(0 0 0 0); white-space: nowrap; }
 
-.has-cursor, .has-cursor a, .has-cursor button { cursor: none; }
 
 /* ============ UTILIDADES ============ */
 .container { width: 100%; max-width: 1240px; margin: 0 auto; padding: 0 var(--gutter); }
@@ -81,16 +81,6 @@ input, textarea, select { font: inherit; color: inherit; }
 .btn-o:hover { border-color: rgba(255, 255, 255, 0.45); }
 .btn-sm { padding: 10px 20px; font-size: 13px; min-height: 40px; }
 .btn[disabled] { opacity: 0.55; pointer-events: none; }
-
-/* ============ CURSOR ============ */
-.cur-dot, .cur-ring { position: fixed; top: 0; left: 0; pointer-events: none; border-radius: 50%; z-index: 10000; }
-.cur-dot { width: 8px; height: 8px; margin: -4px 0 0 -4px; background: var(--acc2); }
-.cur-ring { width: 42px; height: 42px; margin: -21px 0 0 -21px; border: 1.5px solid rgba(255, 138, 61, 0.55); display: flex; align-items: center; justify-content: center; transition: width 0.4s var(--ease-out), height 0.4s var(--ease-out), margin 0.4s var(--ease-out), background 0.3s, border-color 0.3s; }
-.cur-ring span { font-size: 10.5px; font-weight: 600; letter-spacing: 0.14em; text-transform: uppercase; opacity: 0; transition: opacity 0.2s; }
-.cur-hover .cur-ring { width: 64px; height: 64px; margin: -32px 0 0 -32px; background: var(--acc-a10); border-color: var(--acc); }
-.cur-view .cur-ring { width: 96px; height: 96px; margin: -48px 0 0 -48px; background: var(--acc); border-color: var(--acc); }
-.cur-view .cur-ring span { opacity: 1; }
-.cur-view .cur-dot { opacity: 0; }
 
 /* ============ GRANO + PROGRESO ============ */
 .grain { position: fixed; inset: 0; pointer-events: none; z-index: 9990; opacity: 0.045; background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='180' height='180'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='.85' numOctaves='3' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)'/%3E%3C/svg%3E"); }
@@ -246,6 +236,7 @@ input, textarea, select { font: inherit; color: inherit; }
 .cat { font-size: 11px; color: var(--acc2); text-transform: uppercase; letter-spacing: 0.14em; font-weight: 600; }
 
 /* ============ PORTAFOLIO ============ */
+.pf-head > div:first-child { flex: 1 1 320px; min-width: 0; }
 .pf-head { display: flex; align-items: flex-end; justify-content: space-between; gap: 20px; flex-wrap: wrap; margin-bottom: 44px; }
 .filters { display: flex; gap: 4px; flex-wrap: wrap; padding: 5px; border-radius: var(--rf); background: rgba(255, 255, 255, 0.03); border: 1px solid var(--line); }
 .filters button { padding: 8px 16px; border-radius: var(--rf); font-size: 13px; font-weight: 500; color: var(--g2); transition: all 0.35s var(--ease-out); min-height: 36px; }
@@ -398,7 +389,57 @@ textarea.fi { resize: vertical; min-height: 130px; }
   .hplay .ring { animation-duration: 40s; }
 }
 
-/* El cursor propio solo existe con mouse. */
-.cur-dot, .cur-ring { display: none; }
-.has-cursor .cur-dot { display: block; }
-.has-cursor .cur-ring { display: flex; }
+
+/* ============ TÍTULOS ESTILO REFERENCIA (“Portfolio” + firma) ============ */
+.stitle { container-type: inline-size; --fsz: min(7.2rem, calc(100cqw / (var(--n, 8) * 0.84))); position: relative; display: block; margin: 0 0 clamp(36px, 6vw, 64px); line-height: 1; padding-bottom: calc(var(--fsz) * 0.3); width: 100%; }
+.stitle.center { text-align: center; }
+.stitle-main {
+  display: inline-block; font-family: var(--fw), sans-serif; font-weight: 800; letter-spacing: -0.02em; color: #fff;
+  font-size: var(--fsz); white-space: nowrap;
+  text-shadow: 0 10px 40px rgba(0, 0, 0, 0.55), 0 2px 0 rgba(0, 0, 0, 0.25);
+}
+.stitle-main .lc { display: inline-block; }
+.stitle-script {
+  position: absolute; left: 0; bottom: -0.05em; font-family: var(--fsig), cursive; font-weight: 400; color: var(--acc);
+  font-size: min(calc(var(--fsz) * 0.62), calc(100cqw / (var(--s, 12) * 0.36)));
+  transform: translateX(18%) rotate(-6deg); transform-origin: left center; white-space: nowrap;
+  text-shadow: 0 4px 24px rgba(255, 106, 19, 0.35);
+}
+.stitle.center .stitle-script { left: 50%; transform: translateX(-38%) rotate(-6deg); }
+.stitle-sub { display: block; margin-top: 18px; font-size: 15px; color: var(--g2); max-width: 560px; line-height: 1.7; }
+.stitle.center .stitle-sub { margin-left: auto; margin-right: auto; }
+
+/* ============ EL EQUIPO DE PUNTEROS ============ */
+.crew { position: absolute; inset: 0; pointer-events: none; z-index: 900; overflow: hidden; }
+.crew-agents { position: fixed; inset: 0; pointer-events: none; z-index: 995; overflow: hidden; }
+.cc { position: absolute; left: 0; top: 0; opacity: 0; display: flex; align-items: flex-start; will-change: transform; transform-origin: 0 0; }
+.cc svg { display: none; }
+.cc .i-arrow, .cc.k-ibeam .i-ibeam, .cc.k-pen .i-pen { display: block; }
+.cc.k-ibeam .i-arrow, .cc.k-pen .i-arrow { display: none; }
+.cc svg { width: 22px; height: 22px; flex-shrink: 0; filter: drop-shadow(0 3px 6px rgba(0, 0, 0, 0.55)); }
+.cc .i-ibeam { margin: -11px 0 0 -11px; }
+.cc .i-pen { margin: -20px 0 0 -3px; }
+.cc-tag {
+  margin: 18px 0 0 -6px; background: var(--c); color: #fff; font: 600 11px/1 var(--fb), sans-serif; letter-spacing: 0.01em;
+  padding: 6px 10px; border-radius: 4px 999px 999px 999px; white-space: nowrap;
+  box-shadow: 0 8px 20px -6px var(--c), inset 0 0 0 1px rgba(255, 255, 255, 0.18);
+}
+.cc.k-ibeam .cc-tag { margin: 8px 0 0 0; }
+.cc.k-pen .cc-tag { margin: 4px 0 0 2px; }
+.crew-flash { position: absolute; border: 1.5px solid; border-radius: 6px; pointer-events: none; }
+.crew-flash i { position: absolute; width: 8px; height: 8px; background: #fff; border: 1.5px solid; border-radius: 2px; }
+.crew-flash .tl { left: -5px; top: -5px; } .crew-flash .tr { right: -5px; top: -5px; }
+.crew-flash .bl { left: -5px; bottom: -5px; } .crew-flash .br { right: -5px; bottom: -5px; }
+.cc-tag small { font-size: 10px; font-weight: 500; opacity: 0.82; margin-left: 6px; }
+.crew-frame { position: absolute; left: 0; top: 0; border: 1.5px solid var(--c); opacity: 0; }
+.crew-frame i { position: absolute; width: 9px; height: 9px; background: #fff; border: 1.5px solid var(--c); border-radius: 2px; }
+.crew-frame .tl { left: -5px; top: -5px; } .crew-frame .tr { right: -5px; top: -5px; }
+.crew-frame .bl { left: -5px; bottom: -5px; } .crew-frame .br { right: -5px; bottom: -5px; }
+.crew-frame .dim { position: absolute; left: 50%; bottom: -28px; transform: translateX(-50%); background: var(--c); color: #fff; font: 600 10px/1 var(--fb), sans-serif; padding: 4px 7px; border-radius: 4px; white-space: nowrap; }
+.crew-sel { position: absolute; left: 0; top: 0; border: 1.5px dashed; border-radius: 6px; opacity: 0; }
+.crew-ripple { position: absolute; left: 0; top: 0; width: 70px; height: 70px; margin: -35px 0 0 -35px; border-radius: 50%; border: 2px solid; opacity: 0; }
+@media (max-width: 640px) {
+  .cc svg { width: 18px; height: 18px; }
+  .cc-tag { font-size: 10px; padding: 5px 8px; }
+  .cc-tag small { display: none; }
+}

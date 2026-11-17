@@ -5,6 +5,7 @@ import { useEffect, useRef } from "react";
 import gsap from "gsap";
 import EmberField from "@/components/motion/EmberField";
 import { onReady, splitWords } from "@/components/motion/MotionRoot";
+import { Crew, showCrew } from "@/components/motion/Crew";
 import Icon, { PlayIcon } from "./Icon";
 import Socials from "./Socials";
 import type { SiteData } from "@/lib/content";
@@ -51,7 +52,46 @@ export default function Hero({ site, mediaUrl, reelHref }: Props) {
         .from(q(".hbadge"), { scale: 0, opacity: 0, rotate: -10, ease: "back.out(2)", duration: 1 }, 1.4)
         .from(q(".hplay"), { scale: 0, opacity: 0, rotate: -90, ease: "back.out(1.8)", duration: 1.1 }, 1.5)
         .from(q(".hscroll"), { opacity: 0, x: 20, duration: 1 }, 1.6);
-      cleanups.push(onReady(() => tl.play()));
+      // ---- El equipo arranca en la portada: uno escribe, otro estira la foto, otro hace clic ----
+      const layer = document.querySelector<HTMLElement>(".crew");
+      if (layer) {
+        const crew = new Crew(layer, 0);
+        cleanups.push(() => crew.destroy());
+        const hhEl = q(".hh")[0] as HTMLElement, mediaEl = q(".hvis-media")[0] as HTMLElement;
+        const btn = q(".hctas .btn-p")[0] as HTMLElement | undefined;
+        const H = () => crew.box(hhEl), M = () => crew.box(mediaEl);
+
+        const writer = crew.cursor(crew.next(), "escribiendo", true);
+        tl.fromTo(writer, { x: () => H().x - 70, y: () => H().y + H().h + 30, opacity: 0 }, { x: () => H().x - 6, y: () => H().y + H().h * 0.25, opacity: 1, duration: 0.35, ease: "power2.out" }, 0.45)
+          .to(writer, { x: () => H().x + H().w, y: () => H().y + H().h * 0.62, duration: 1.45, ease: "none" }, 0.8)
+          .to(writer, { x: "+=50", y: "+=50", opacity: 0, duration: 0.4, ease: "power2.in" }, 2.3);
+
+        const m2 = crew.next();
+        const stretcher = crew.cursor(m2, "estirando");
+        const frame = crew.frame(m2);
+        const dim = frame.querySelector<HTMLElement>(".dim")!;
+        tl.fromTo(frame, { x: () => M().x, y: () => M().y + M().h, width: () => M().w, height: 0, opacity: 0 }, { opacity: 1, duration: 0.15 }, 0.25)
+          .fromTo(stretcher, { x: () => M().x + M().w + 60, y: () => M().y + M().h + 40, opacity: 0 }, { x: () => M().x + M().w, y: () => M().y + M().h, opacity: 1, duration: 0.3, ease: "power2.out" }, 0.1)
+          .to(frame, { y: () => M().y, height: () => M().h, duration: 1.8, ease: "expo.inOut", onUpdate: () => { dim.textContent = `${Math.round(M().w)} × ${Math.round(Number(gsap.getProperty(frame, "height")))}`; } }, 0.25)
+          .to(stretcher, { y: () => M().y, duration: 1.8, ease: "expo.inOut" }, 0.25)
+          .to(frame, { opacity: 0, duration: 0.4 }, 2.2)
+          .to(stretcher, { x: "+=60", y: "-=30", opacity: 0, duration: 0.4, ease: "power2.in" }, 2.15);
+
+        if (btn) {
+          const m3 = crew.next();
+          const clicker = crew.cursor(m3, "revisando");
+          const ripple = crew.ripple(m3);
+          const Bt = () => crew.box(btn);
+          tl.fromTo(clicker, { x: () => Bt().x + Bt().w + 80, y: () => Bt().y + Bt().h + 70, opacity: 0 }, { x: () => Bt().x + Bt().w * 0.6, y: () => Bt().y + Bt().h * 0.55, opacity: 1, duration: 0.6, ease: "power2.out" }, 1.5)
+            .to(clicker, { scale: 0.82, duration: 0.08 }, 2.15)
+            .fromTo(ripple, { x: () => Bt().x + Bt().w * 0.6, y: () => Bt().y + Bt().h * 0.55, scale: 0.2, opacity: 0.9 }, { scale: 1.8, opacity: 0, duration: 0.6, ease: "power2.out" }, 2.18)
+            .to(clicker, { scale: 1, duration: 0.1 }, 2.25)
+            .to(clicker, { x: "+=70", y: "+=40", opacity: 0, duration: 0.45, ease: "power2.in" }, 2.6);
+        }
+        crew.bind(tl);
+      }
+
+      cleanups.push(onReady(() => { tl.play(); showCrew(); }));
 
 
       // Parallax al hacer scroll.

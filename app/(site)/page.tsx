@@ -6,6 +6,7 @@ import PortfolioGrid from "@/components/site/PortfolioGrid";
 import ContactForm from "@/components/site/ContactForm";
 import Socials from "@/components/site/Socials";
 import Icon from "@/components/site/Icon";
+import SectionTitle from "@/components/site/SectionTitle";
 import { getProjects, getSite, getTestimonials } from "@/lib/data";
 import { mediaUrl } from "@/lib/supabase/config";
 import { toCard } from "@/lib/cards";
@@ -75,7 +76,7 @@ export default async function HomePage() {
 
       <section className="section" id="sobre-mi">
         <div className="container about-grid">
-          <div className="about-pic" data-reveal>
+          <div className="about-pic" data-crew="drag-left">
             <div className="about-frame">
               {aboutImg ? (
                 // eslint-disable-next-line @next/next/no-img-element
@@ -87,14 +88,14 @@ export default async function HomePage() {
             <div className="about-tag"><span className="ic"><Icon name="video" /></span><div><b>Edición premium</b>Entrega en 24–72 h</div></div>
           </div>
           <div>
-            <div className="eyebrow" data-reveal>Sobre mí</div>
-            <h2 className="title" data-split>{titleWords.slice(0, cut).join(" ")} <em>{titleWords.slice(cut).join(" ")}</em></h2>
+            <SectionTitle main="Sobre mí" script="mi historia" />
+            <h3 className="title" style={{ fontSize: "clamp(1.6rem,2.6vw,2.2rem)" }} data-reveal>{titleWords.slice(0, cut).join(" ")} <em>{titleWords.slice(cut).join(" ")}</em></h3>
             <p className="lead" data-reveal>{site.bio}</p>
             <div className="skills" data-reveal>
               {site.skills.map((s) => (
                 <div className="skill" key={s.name}>
                   <div className="skill-h"><span>{s.name}</span><span>{s.level}%</span></div>
-                  <div className="skill-b"><div className="skill-f" style={{ ["--w" as string]: `${s.level}%` }} data-skill /></div>
+                  <div className="skill-b"><div className="skill-f" style={{ ["--w" as string]: `${s.level}%` }} data-skill={s.level} /></div>
                 </div>
               ))}
             </div>
@@ -108,13 +109,10 @@ export default async function HomePage() {
 
       <section className="section services" id="servicios">
         <div className="container">
-          <div className="sec-head center">
-            <div className="eyebrow center" data-reveal>Mis servicios</div>
-            <h2 className="title" data-split>Lo que puedo <em>hacer por ti</em></h2>
-          </div>
+          <SectionTitle main="Servicios" script="lo que hago" center />
           <div className="serv-grid">
             {SERVICES.map((s, i) => (
-              <article className="card" key={s.title} data-tilt data-reveal>
+              <article className="card" key={s.title} data-tilt data-crew="stretch">
                 <div className="card-ic"><Icon name={s.icon} size={24} stroke={1.5} /></div>
                 <h3>{s.title}</h3>
                 <p>{s.text}</p>
@@ -131,10 +129,9 @@ export default async function HomePage() {
         <div className="container">
           <div className="pf-head">
             <div>
-              <div className="eyebrow" data-reveal>Portafolio</div>
-              <h2 className="title" style={{ marginBottom: 0 }} data-split>Trabajos <em>seleccionados</em></h2>
+              <SectionTitle main="Portafolio" script="trabajos selectos" />
             </div>
-            <Link href="/portafolio" className="btn btn-o" data-magnetic data-reveal>Ver todo <Icon name="arrow" className="arr" /></Link>
+            <Link href="/portafolio" className="btn btn-o" style={{ marginBottom: 40 }} data-magnetic data-reveal>Ver todo <Icon name="arrow" className="arr" /></Link>
           </div>
           <PortfolioGrid items={latest} showFilters={false} />
         </div>
@@ -142,10 +139,7 @@ export default async function HomePage() {
 
       <section className="section process">
         <div className="container">
-          <div className="sec-head center">
-            <div className="eyebrow center" data-reveal>Mi proceso</div>
-            <h2 className="title" data-split>Cómo <em>trabajo</em></h2>
-          </div>
+          <SectionTitle main="Proceso" script="cómo trabajo" center />
           <div className="steps" data-steps>
             <div className="steps-line"><div className="steps-fill" /></div>
             {STEPS.map((s, i) => (
@@ -162,16 +156,13 @@ export default async function HomePage() {
 
       <section className="section" id="testimonios">
         <div className="container">
-          <div className="sec-head center">
-            <div className="eyebrow center" data-reveal>Testimonios</div>
-            <h2 className="title" data-split>Lo que dicen mis <em>clientes</em></h2>
-          </div>
+          <SectionTitle main="Clientes" script="lo que dicen" center />
           <div className="tgrid">
             {testimonials.length ? (
-              testimonials.map((t) => {
+              testimonials.map((t, i) => {
                 const av = mediaUrl(t.avatar_path);
                 return (
-                  <figure className="tcard" key={t.id} data-reveal data-tilt>
+                  <figure className="tcard" key={t.id} data-tilt data-crew={i % 2 ? "drag-right" : "drag-left"}>
                     <div className="stars" aria-label={`${t.stars} de 5 estrellas`}>{"★".repeat(t.stars)}</div>
                     <div className="q" aria-hidden="true">“</div>
                     <blockquote><p>{t.body}</p></blockquote>
@@ -193,10 +184,9 @@ export default async function HomePage() {
       <section className="section contact" id="contacto">
         <div className="container contact-grid">
           <div>
-            <div className="eyebrow" data-reveal>Contacto</div>
-            <h2 className="title" data-split>Hablemos de tu <em>próximo proyecto</em></h2>
+            <SectionTitle main="Contacto" script="hablemos" />
             <p className="lead" data-reveal>¿Listo para crear algo increíble? Cuéntame sobre tu proyecto y en menos de 24 horas tendrás una propuesta.</p>
-            <div className="clist" data-reveal>
+            <div className="clist" data-crew="drag-left">
               {site.email && (
                 <a className="citem" href={`mailto:${site.email}`}><span className="ic"><Icon name="mail" /></span><div><small>Email</small><span>{site.email}</span></div></a>
               )}
@@ -209,7 +199,7 @@ export default async function HomePage() {
             </div>
             <div data-reveal><Socials socials={site.socials} /></div>
           </div>
-          <div className="form-card" data-reveal>
+          <div className="form-card" data-crew="select">
             <h3>Envíame un mensaje</h3>
             <ContactForm />
           </div>

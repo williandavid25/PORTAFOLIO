@@ -1,8 +1,12 @@
 import type { Metadata, Viewport } from "next";
-import { Playfair_Display, Inter, Dancing_Script, Bebas_Neue } from "next/font/google";
+import { Source_Serif_4, Inter, Dancing_Script, Bebas_Neue, Unbounded, Mr_Dafoe } from "next/font/google";
 import "./globals.css";
 
-const display = Playfair_Display({ subsets: ["latin"], variable: "--fd", style: ["normal", "italic"], display: "swap" });
+// Serif del hero (como "Hi, I'm Hawra."), letra ancha y gruesa para los títulos
+// (como "Portfolio") y firma manuscrita naranja (como "Hawra_Graphics").
+const display = Source_Serif_4({ subsets: ["latin"], variable: "--fd", style: ["normal", "italic"], display: "swap" });
+const wide = Unbounded({ subsets: ["latin"], variable: "--fw", weight: ["700", "800", "900"], display: "swap" });
+const sign = Mr_Dafoe({ subsets: ["latin"], variable: "--fsig", weight: "400", display: "swap" });
 const body = Inter({ subsets: ["latin"], variable: "--fb", display: "swap" });
 const script = Dancing_Script({ subsets: ["latin"], variable: "--fs", weight: ["600", "700"], display: "swap" });
 const mono = Bebas_Neue({ subsets: ["latin"], variable: "--fm", weight: "400", display: "swap" });
@@ -29,7 +33,7 @@ export const viewport: Viewport = {
 
 export default function RootLayout({ children }: LayoutProps<"/">) {
   return (
-    <html lang="es" className={`${display.variable} ${body.variable} ${script.variable} ${mono.variable}`} suppressHydrationWarning>
+    <html lang="es" className={`${display.variable} ${body.variable} ${script.variable} ${mono.variable} ${wide.variable} ${sign.variable}`} suppressHydrationWarning>
       <body>{children}</body>
     </html>
   );
