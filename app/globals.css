@@ -654,3 +654,8 @@ textarea.fi { resize: vertical; min-height: 130px; }
   -webkit-mask-repeat: no-repeat; mask-repeat: no-repeat;
   -webkit-mask-size: 100% 100%; mask-size: 100% 100%;
 }
+
+/* ============ PORTADA: la foto trae su propia transparencia ============ */
+/* La persona, el sillón y los zapatos son 100 % opacos dentro de la imagen y solo el fondo
+   de los bordes se funde (canal alfa horneado). Por eso aquí no se aplica ninguna máscara. */
+.hero[data-photo][data-side] .hvis-media.has-photo img.hmain { -webkit-mask-image: none; mask-image: none; }
