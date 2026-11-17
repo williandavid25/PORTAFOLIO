@@ -1,7 +1,8 @@
 import type { NextConfig } from "next";
+import { PUBLIC_SUPABASE_URL } from "./lib/supabase/public";
 
 const isDev = process.env.NODE_ENV !== "production";
-const supabase = process.env.NEXT_PUBLIC_SUPABASE_URL ?? "";
+const supabase = PUBLIC_SUPABASE_URL;
 const supabaseHost = supabase ? new URL(supabase).host : "";
 const sb = supabaseHost ? `https://${supabaseHost}` : "";
 const sbWs = supabaseHost ? `wss://${supabaseHost}` : "";

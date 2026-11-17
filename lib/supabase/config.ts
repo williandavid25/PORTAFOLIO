@@ -1,11 +1,12 @@
 import type { CookieOptions } from "@supabase/ssr";
+import { PUBLIC_SUPABASE_ANON_KEY, PUBLIC_SUPABASE_URL } from "./public";
 
 export type CookieToSet = { name: string; value: string; options: CookieOptions };
 
 /** Devuelve la configuración pública de Supabase, o null si aún no está puesta. */
 export function getSupabaseConfig() {
-  const url = process.env.NEXT_PUBLIC_SUPABASE_URL;
-  const key = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY;
+  const url = PUBLIC_SUPABASE_URL;
+  const key = PUBLIC_SUPABASE_ANON_KEY;
   if (!url || !key) return null;
   return { url, key };
 }

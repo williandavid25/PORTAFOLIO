@@ -1,6 +1,7 @@
 "use client";
 
 import { getBrowserClient } from "@/lib/supabase/client";
+import { PUBLIC_SUPABASE_ANON_KEY, PUBLIC_SUPABASE_URL } from "@/lib/supabase/public";
 
 export const MAX_BYTES = 50 * 1024 * 1024; // límite por archivo del plan gratuito de Supabase
 const IMAGE = ["image/jpeg", "image/png", "image/webp", "image/gif"];
@@ -19,8 +20,8 @@ export const fileName = (base: string, type: string) => `${base}-${Date.now().to
 /** Sube directo a Supabase Storage con barra de progreso. RLS exige que seas el admin. */
 export async function uploadFile(path: string, file: Blob, onProgress?: (pct: number) => void): Promise<void> {
   const sb = getBrowserClient();
-  const url = process.env.NEXT_PUBLIC_SUPABASE_URL;
-  const anon = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY;
+  const url = PUBLIC_SUPABASE_URL;
+  const anon = PUBLIC_SUPABASE_ANON_KEY;
   if (!sb || !url || !anon) throw new Error("Supabase no está configurado.");
   const { data: { session } } = await sb.auth.getSession();
   if (!session) throw new Error("Tu sesión expiró. Vuelve a entrar.");
