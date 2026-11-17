@@ -20,7 +20,7 @@ const SERVICES = [
   { icon: "playc", title: "YouTube & Streaming", text: "Edición profesional para creadores: intros, outros, thumbnails animados y motion graphics personalizados." },
   { icon: "pen", title: "Color Grading", text: "Corrección y gradación de color profesional con estética cinematográfica." },
   { icon: "pulse", title: "Motion Graphics", text: "Animaciones tipográficas, intros dinámicas y gráficos en movimiento que elevan tu contenido." },
-  { icon: "code", title: "Desarrollo Web", text: "Páginas y herramientas web a medida, programadas en Visual Studio Code y versionadas en GitHub, listas para publicarse." },
+  { icon: "code", title: "Desarrollo Web", text: "Páginas web sencillas y landing pages con HTML, CSS y JavaScript, trabajadas en Visual Studio Code y versionadas en GitHub." },
   { icon: "users", title: "Community Management", text: "Gestiono tus redes: calendario de contenido, publicaciones, respuesta a la comunidad y reporte de resultados." },
 ];
 
@@ -31,6 +31,21 @@ const STEPS = [
   { icon: "clock", title: "Color & Audio", text: "Gradación de color cinematográfica y mezcla de audio profesional." },
   { icon: "eye", title: "Revisión", text: "Primer corte y ajustes contigo hasta la perfección." },
   { icon: "send", title: "Entrega", text: "Exportación optimizada para cada plataforma y formato." },
+];
+
+const PILLARS = [
+  {
+    icon: "film", title: "Editor de video", lead: "Mi especialidad. Videos con ritmo, color y sonido cuidados para cada plataforma.",
+    points: ["Reels, TikToks y Shorts", "Publicidad y video corporativo", "Color grading y motion graphics", "Formatos listos para cada red"],
+  },
+  {
+    icon: "code", title: "Programación web", lead: "Nivel básico, enfocado en resultados prácticos para mis clientes y proyectos.",
+    points: ["Páginas sencillas con HTML, CSS y JavaScript", "Visual Studio Code", "Control de versiones con Git y GitHub", "Publicación del sitio en la web"],
+  },
+  {
+    icon: "users", title: "Community Manager", lead: "Experiencia gestionando las redes sociales de marcas, de la idea al reporte.",
+    points: ["Calendario y estrategia de contenido", "Publicación y programación de posts", "Respuesta y cuidado de la comunidad", "Reporte de métricas y resultados"],
+  },
 ];
 
 const MARQUEE = ["Edición de video", "Desarrollo web", "Community Manager", "Reels", "Motion Graphics", "Color Grading"];
@@ -109,12 +124,28 @@ export default async function HomePage() {
         </div>
       </section>
 
+      <section className="section pillars-sec" id="perfil">
+        <div className="container">
+          <SectionTitle main="Perfil" script="tres en uno" center sub="Edito, programo y gestiono redes: un solo contacto para que tu marca se vea bien, funcione en la web y crezca en redes." />
+          <div className="pillars">
+            {PILLARS.map((p, i) => (
+              <article className="pillar" key={p.title} data-tilt data-crew="stretch">
+                <div className="pillar-top"><span className="card-ic"><Icon name={p.icon} size={22} stroke={1.4} /></span><span className="pillar-num">0{i + 1}</span></div>
+                <h3>{p.title}</h3>
+                <p>{p.lead}</p>
+                <ul>{p.points.map((pt) => <li key={pt}>{pt}</li>)}</ul>
+              </article>
+            ))}
+          </div>
+        </div>
+      </section>
+
       <section className="section tools-sec" id="herramientas">
         <div className="container">
           <SectionTitle main="Herramientas" script="con lo que trabajo" center />
           <div className="tools-grid">
             {site.tools.map((g, i) => (
-              <div className="tools-card" key={g.group} data-crew={i % 2 ? "drag-right" : "drag-left"}>
+              <div className="tools-card" key={g.group} data-crew="stretch">
                 <div className="tools-head"><span className="tools-num">0{i + 1}</span><h3>{g.group}</h3></div>
                 <ul className="chips">{g.items.map((t) => <li key={t}>{t}</li>)}</ul>
               </div>
@@ -201,7 +232,7 @@ export default async function HomePage() {
         <div className="container contact-grid">
           <div>
             <SectionTitle main="Contacto" script="hablemos" />
-            <p className="lead" data-reveal>¿Listo para crear algo increíble? Cuéntame sobre tu proyecto y en menos de 24 horas tendrás una propuesta.</p>
+            <p className="lead" data-reveal>¿Necesitas videos, una página web sencilla o alguien que gestione tus redes? Cuéntame sobre tu proyecto y en menos de 24 horas tendrás una propuesta.</p>
             <div className="clist" data-crew="drag-left">
               {site.email && (
                 <a className="citem" href={`mailto:${site.email}`}><span className="ic"><Icon name="mail" /></span><div><small>Email</small><span>{site.email}</span></div></a>

@@ -7,6 +7,8 @@ export const CATEGORIES = {
   music: "Música",
   youtube: "YouTube",
   motion: "Motion Graphics",
+  web: "Desarrollo web",
+  community: "Community Manager",
 } as const;
 export type Category = keyof typeof CATEGORIES;
 export const CATEGORY_KEYS = Object.keys(CATEGORIES) as [Category, ...Category[]];
@@ -48,15 +50,15 @@ export type SiteData = z.infer<typeof siteSchema>;
 
 export const DEFAULT_SITE: SiteData = {
   name: "DevWilly",
-  role: "Editor & Developer",
-  tagline: "Video Editor · Programador · Community Manager",
-  heroDesc: "Edito videos que detienen el scroll, programo páginas y herramientas web, y gestiono comunidades en redes. Todo lo que tu marca necesita para verse y crecer en digital.",
+  role: "Video · Code · Community",
+  tagline: "Editor de video · Programación web · Community Manager",
+  heroDesc: "Edito videos que detienen el scroll, programo páginas web sencillas y tengo experiencia como community manager gestionando las redes de marcas. Todo lo que tu marca necesita para verse y crecer en digital.",
   available: true,
   heroSide: "left",
   heroMediaPath: "",
   heroMediaType: "",
   aboutTitle: "Edito, programo y hago crecer marcas",
-  bio: "Soy editor de video especializado en contenido para redes sociales, campañas publicitarias y producciones corporativas. Además soy programador: creo páginas y herramientas web con Visual Studio Code y GitHub. Y como community manager gestiono las redes de las marcas: planifico el contenido, publico, respondo a la comunidad y mido los resultados.",
+  bio: "Soy DevWilly, editor de video especializado en contenido para redes sociales, campañas publicitarias y producciones corporativas. Tengo conocimientos de programación web básica (HTML, CSS y JavaScript), trabajo con Visual Studio Code y GitHub, y con eso creo páginas sencillas y herramientas para mis proyectos. Además tengo experiencia como community manager: planifico el contenido, publico, respondo a la comunidad y analizo los resultados para que cada publicación sume.",
   aboutImagePath: "",
   skills: [
     { name: "Premiere Pro", level: 95 },
