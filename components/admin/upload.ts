@@ -27,7 +27,7 @@ export async function uploadFile(path: string, file: Blob, onProgress?: (pct: nu
 
   await new Promise<void>((resolve, reject) => {
     const xhr = new XMLHttpRequest();
-    xhr.open("POST", `${url}/storage/v1/object/media/${path}`);
+    xhr.open("POST", `${url}/storage/v1/object/portafolio/${path}`);
     xhr.setRequestHeader("Authorization", `Bearer ${session.access_token}`);
     xhr.setRequestHeader("apikey", anon);
     xhr.setRequestHeader("x-upsert", "true");

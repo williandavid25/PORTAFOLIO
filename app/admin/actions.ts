@@ -32,7 +32,7 @@ export async function loginAction(_: ActionResult | null, form: FormData): Promi
     await new Promise((r) => setTimeout(r, 600)); // frena ataques de fuerza bruta
     return fail(generic);
   }
-  const { data: isAdmin } = await supabase.rpc("is_admin");
+  const { data: isAdmin } = await supabase.rpc("pf_is_admin");
   if (!allowed || data.user.email?.toLowerCase() !== allowed || isAdmin !== true) {
     await supabase.auth.signOut();
     return fail("Esta cuenta no tiene permiso para administrar el sitio.");
@@ -52,8 +52,8 @@ export async function saveSiteAction(input: SiteData): Promise<ActionResult> {
   const parsed = siteSchema.safeParse(input);
   if (!parsed.success) return fail(parsed.error.issues[0]?.message ?? "Datos no válidos.");
 
-  const { data: prev } = await supabase.from("site_settings").select("data").eq("id", 1).maybeSingle();
-  const { error } = await supabase.from("site_settings").update({ data: parsed.data, updated_at: new Date().toISOString() }).eq("id", 1);
+  const { data: prev } = await supabase.from("pf_site").select("data").eq("id", 1).maybeSingle();
+  const { error } = await supabase.from("pf_site").update({ data: parsed.data, updated_at: new Date().toISOString() }).eq("id", 1);
   if (error) return fail("No se pudo guardar.");
 
   // Borra archivos que se reemplazaron.
@@ -98,7 +98,7 @@ export async function saveProjectAction(input: ProjectInput): Promise<ActionResu
   const base = slugify(p.slug || p.title);
   let slug = base;
   for (let n = 2; n < 50; n++) {
-    const { data } = await supabase.from("projects").select("id").eq("slug", slug).neq("id", p.id).maybeSingle();
+    const { data } = await supabase.from("pf_projects").select("id").eq("slug", slug).neq("id", p.id).maybeSingle();
     if (!data) break;
     slug = `${base}-${n}`;
   }
@@ -111,16 +111,16 @@ export async function saveProjectAction(input: ProjectInput): Promise<ActionResu
 
   let prev: { video_path: string | null; thumb_path: string | null } | null = null;
   if (p.isNew) {
-    const { error } = await supabase.from("projects").insert({ id: p.id, ...row });
+    const { error } = await supabase.from("pf_projects").insert({ id: p.id, ...row });
     if (error) return fail("No se pudo guardar el proyecto.");
   } else {
-    const { data } = await supabase.from("projects").select("video_path,thumb_path").eq("id", p.id).maybeSingle();
+    const { data } = await supabase.from("pf_projects").select("video_path,thumb_path").eq("id", p.id).maybeSingle();
     prev = data;
-    const { error } = await supabase.from("projects").update(row).eq("id", p.id);
+    const { error } = await supabase.from("pf_projects").update(row).eq("id", p.id);
     if (error) return fail("No se pudo guardar el proyecto.");
   }
   // Solo un destacado a la vez.
-  if (p.featured) await supabase.from("projects").update({ featured: false }).neq("id", p.id).eq("featured", true);
+  if (p.featured) await supabase.from("pf_projects").update({ featured: false }).neq("id", p.id).eq("featured", true);
   const stale = [prev?.video_path, prev?.thumb_path].filter((x): x is string => !!x && x !== p.videoPath && x !== p.thumbPath);
   if (stale.length) await supabase.storage.from(MEDIA_BUCKET).remove(stale);
 
@@ -132,7 +132,7 @@ export async function deleteProjectAction(id: string): Promise<ActionResult> {
   const { supabase } = await requireAdminAction();
   if (!uuid.safeParse(id).success) return fail("Proyecto no válido.");
   const { data: files } = await supabase.storage.from(MEDIA_BUCKET).list(`projects/${id}`);
-  const { error } = await supabase.from("projects").delete().eq("id", id);
+  const { error } = await supabase.from("pf_projects").delete().eq("id", id);
   if (error) return fail("No se pudo eliminar.");
   if (files?.length) await supabase.storage.from(MEDIA_BUCKET).remove(files.map((f) => `projects/${id}/${f.name}`));
   refreshSite();
@@ -142,8 +142,8 @@ export async function deleteProjectAction(id: string): Promise<ActionResult> {
 export async function toggleProjectAction(id: string, field: "published" | "featured", value: boolean): Promise<ActionResult> {
   const { supabase } = await requireAdminAction();
   if (!uuid.safeParse(id).success) return fail("Proyecto no válido.");
-  if (field === "featured" && value) await supabase.from("projects").update({ featured: false }).eq("featured", true);
-  const { error } = await supabase.from("projects").update({ [field]: value }).eq("id", id);
+  if (field === "featured" && value) await supabase.from("pf_projects").update({ featured: false }).eq("featured", true);
+  const { error } = await supabase.from("pf_projects").update({ [field]: value }).eq("id", id);
   if (error) return fail("No se pudo actualizar.");
   refreshSite();
   return { ok: true };
@@ -152,7 +152,7 @@ export async function toggleProjectAction(id: string, field: "published" | "feat
 export async function reorderProjectsAction(ids: string[]): Promise<ActionResult> {
   const { supabase } = await requireAdminAction();
   if (!z.array(uuid).max(300).safeParse(ids).success) return fail("Orden no válido.");
-  for (let i = 0; i < ids.length; i++) await supabase.from("projects").update({ sort_order: i }).eq("id", ids[i]);
+  for (let i = 0; i < ids.length; i++) await supabase.from("pf_projects").update({ sort_order: i }).eq("id", ids[i]);
   refreshSite();
   return { ok: true };
 }
@@ -178,8 +178,8 @@ export async function saveTestimonialAction(input: TestimonialInput): Promise<Ac
   if (t.avatarPath && !new RegExp(`^testimonials/${t.id}/[a-z0-9._-]{1,80}$`).test(t.avatarPath)) return fail("Archivo no válido.");
   const row = { name: t.name, role: t.role, body: t.body, stars: t.stars, avatar_path: t.avatarPath, published: t.published };
   const { error } = t.isNew
-    ? await supabase.from("testimonials").insert({ id: t.id, ...row })
-    : await supabase.from("testimonials").update(row).eq("id", t.id);
+    ? await supabase.from("pf_testimonials").insert({ id: t.id, ...row })
+    : await supabase.from("pf_testimonials").update(row).eq("id", t.id);
   if (error) return fail("No se pudo guardar.");
   refreshSite();
   return { ok: true, id: t.id };
@@ -189,7 +189,7 @@ export async function deleteTestimonialAction(id: string): Promise<ActionResult>
   const { supabase } = await requireAdminAction();
   if (!uuid.safeParse(id).success) return fail("No válido.");
   const { data: files } = await supabase.storage.from(MEDIA_BUCKET).list(`testimonials/${id}`);
-  const { error } = await supabase.from("testimonials").delete().eq("id", id);
+  const { error } = await supabase.from("pf_testimonials").delete().eq("id", id);
   if (error) return fail("No se pudo eliminar.");
   if (files?.length) await supabase.storage.from(MEDIA_BUCKET).remove(files.map((f) => `testimonials/${id}/${f.name}`));
   refreshSite();
@@ -200,7 +200,7 @@ export async function deleteTestimonialAction(id: string): Promise<ActionResult>
 export async function markMessageAction(id: string, read: boolean): Promise<ActionResult> {
   const { supabase } = await requireAdminAction();
   if (!uuid.safeParse(id).success) return fail("No válido.");
-  const { error } = await supabase.from("messages").update({ read }).eq("id", id);
+  const { error } = await supabase.from("pf_messages").update({ read }).eq("id", id);
   if (error) return fail("No se pudo actualizar.");
   revalidatePath("/admin", "layout");
   return { ok: true };
@@ -209,7 +209,7 @@ export async function markMessageAction(id: string, read: boolean): Promise<Acti
 export async function deleteMessageAction(id: string): Promise<ActionResult> {
   const { supabase } = await requireAdminAction();
   if (!uuid.safeParse(id).success) return fail("No válido.");
-  const { error } = await supabase.from("messages").delete().eq("id", id);
+  const { error } = await supabase.from("pf_messages").delete().eq("id", id);
   if (error) return fail("No se pudo eliminar.");
   revalidatePath("/admin", "layout");
   return { ok: true };

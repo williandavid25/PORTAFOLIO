@@ -9,7 +9,7 @@ import { normalizeSite, DEFAULT_SITE, PROJECT_COLUMNS, type Project, type SiteDa
 export const getSite = cache(async (): Promise<SiteData> => {
   const db = createPublicClient();
   if (!db) return DEFAULT_SITE;
-  const { data, error } = await db.from("site_settings").select("data").eq("id", 1).maybeSingle();
+  const { data, error } = await db.from("pf_site").select("data").eq("id", 1).maybeSingle();
   if (error || !data) return DEFAULT_SITE;
   return normalizeSite(data.data);
 });
@@ -18,7 +18,7 @@ export const getProjects = cache(async (): Promise<Project[]> => {
   const db = createPublicClient();
   if (!db) return [];
   const { data, error } = await db
-    .from("projects")
+    .from("pf_projects")
     .select(PROJECT_COLUMNS)
     .eq("published", true)
     .order("sort_order", { ascending: true })
@@ -32,7 +32,7 @@ export const getProject = cache(async (slug: string): Promise<Project | null> =>
   if (!/^[a-z0-9-]{1,90}$/.test(slug)) return null;
   const db = createPublicClient();
   if (!db) return null;
-  const { data } = await db.from("projects").select(PROJECT_COLUMNS).eq("slug", slug).eq("published", true).maybeSingle();
+  const { data } = await db.from("pf_projects").select(PROJECT_COLUMNS).eq("slug", slug).eq("published", true).maybeSingle();
   return (data as Project | null) ?? null;
 });
 
@@ -40,7 +40,7 @@ export const getTestimonials = cache(async (): Promise<Testimonial[]> => {
   const db = createPublicClient();
   if (!db) return [];
   const { data, error } = await db
-    .from("testimonials")
+    .from("pf_testimonials")
     .select("id,name,role,body,stars,avatar_path,published,sort_order")
     .eq("published", true)
     .order("sort_order", { ascending: true })

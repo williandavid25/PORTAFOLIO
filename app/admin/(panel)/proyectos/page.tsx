@@ -7,7 +7,7 @@ import ProjectManager from "@/components/admin/ProjectManager";
 
 export default async function ProjectsAdmin() {
   const { supabase } = await requireAdminPage();
-  const { data } = await supabase.from("projects").select(PROJECT_COLUMNS).order("sort_order").order("created_at", { ascending: false });
+  const { data } = await supabase.from("pf_projects").select(PROJECT_COLUMNS).order("sort_order").order("created_at", { ascending: false });
   const rows = ((data ?? []) as Project[]).map((p) => ({
     ...p,
     videoSrc: mediaUrl(p.video_path),

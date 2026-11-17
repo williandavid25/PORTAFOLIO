@@ -10,7 +10,7 @@ export function getSupabaseConfig() {
   return { url, key };
 }
 
-export const MEDIA_BUCKET = "media";
+export const MEDIA_BUCKET = "portafolio";
 
 /** URL pública de un archivo del bucket (fotos y videos). */
 export function mediaUrl(path: string | null | undefined): string | null {

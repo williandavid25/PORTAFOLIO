@@ -6,11 +6,11 @@ export default async function Dashboard() {
   const { supabase, user } = await requireAdminPage();
   const head = { count: "exact" as const, head: true };
   const [projects, published, tests, unread, recent] = await Promise.all([
-    supabase.from("projects").select("id", head),
-    supabase.from("projects").select("id", head).eq("published", true),
-    supabase.from("testimonials").select("id", head),
-    supabase.from("messages").select("id", head).eq("read", false),
-    supabase.from("messages").select("id,name,email,body,created_at,read").order("created_at", { ascending: false }).limit(4),
+    supabase.from("pf_projects").select("id", head),
+    supabase.from("pf_projects").select("id", head).eq("published", true),
+    supabase.from("pf_testimonials").select("id", head),
+    supabase.from("pf_messages").select("id", head).eq("read", false),
+    supabase.from("pf_messages").select("id,name,email,body,created_at,read").order("created_at", { ascending: false }).limit(4),
   ]);
 
   return (

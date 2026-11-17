@@ -3,7 +3,7 @@ import { redirect } from "next/navigation";
 import type { SupabaseClient, User } from "@supabase/supabase-js";
 import { createSessionClient } from "./supabase/server";
 
-/** Correo autorizado. Doble candado: variable de entorno + tabla admin_users (RLS). */
+/** Correo autorizado. Doble candado: variable de entorno + tabla pf_admins (RLS). */
 function allowedEmail() {
   return (process.env.ADMIN_EMAIL ?? "").trim().toLowerCase();
 }
@@ -17,7 +17,7 @@ export async function getAdmin(): Promise<AdminSession | null> {
   const { data: { user } } = await supabase.auth.getUser();
   const email = user?.email?.toLowerCase();
   if (!user || !email || !allowedEmail() || email !== allowedEmail()) return null;
-  const { data: ok, error } = await supabase.rpc("is_admin");
+  const { data: ok, error } = await supabase.rpc("pf_is_admin");
   if (error || ok !== true) return null;
   return { user, supabase };
 }

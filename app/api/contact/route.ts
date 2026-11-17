@@ -37,13 +37,13 @@ export async function POST(request: Request) {
   const ipHash = createHash("sha256").update(`${salt}:${ip}`).digest("hex");
 
   const since = new Date(Date.now() - WINDOW_MIN * 60_000).toISOString();
-  const { count } = await db.from("messages").select("id", { count: "exact", head: true }).eq("ip_hash", ipHash).gte("created_at", since);
+  const { count } = await db.from("pf_messages").select("id", { count: "exact", head: true }).eq("ip_hash", ipHash).gte("created_at", since);
   if ((count ?? 0) >= MAX_PER_WINDOW) {
     return Response.json({ error: "Enviaste varios mensajes seguidos. Intenta de nuevo en unos minutos." }, { status: 429 });
   }
 
   const { name, email, projectType, message } = parsed.data;
-  const { error } = await db.from("messages").insert({ name, email, project_type: projectType, body: message, ip_hash: ipHash });
+  const { error } = await db.from("pf_messages").insert({ name, email, project_type: projectType, body: message, ip_hash: ipHash });
   if (error) return Response.json({ error: "No se pudo enviar. Intenta de nuevo." }, { status: 500 });
   return Response.json({ ok: true });
 }
