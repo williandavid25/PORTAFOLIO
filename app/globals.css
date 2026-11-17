@@ -610,3 +610,14 @@ textarea.fi { resize: vertical; min-height: 130px; }
   .hero[data-photo] .hvis-par { height: 100%; }
   .hero[data-photo] .hvis-media.has-photo { height: calc(var(--hv) * var(--ph)); }
 }
+
+/* ============ PORTADA: foto a la derecha, fundida con el fondo ============ */
+/* El lado que mira al texto (izquierdo) se funde más ancho; el lado de la luz, menos.
+   Arriba se funde más alto para que no se vea el borde superior del cuadro. */
+.hero[data-photo][data-side="right"] .hvis-media.has-photo img.hmain {
+  -webkit-mask-image: linear-gradient(to right, transparent 2%, #000 30%, #000 82%, transparent 98%), linear-gradient(to bottom, transparent 1%, #000 12%, #000 100%);
+  mask-image: linear-gradient(to right, transparent 2%, #000 30%, #000 82%, transparent 98%), linear-gradient(to bottom, transparent 1%, #000 12%, #000 100%);
+}
+
+/* Con la foto a la derecha, el indicador de scroll va a la izquierda (no tapa los zapatos). */
+.hero[data-side="right"] .hscroll { right: auto; left: 40px; flex-direction: row-reverse; }

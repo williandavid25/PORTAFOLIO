@@ -54,7 +54,7 @@ export const DEFAULT_SITE: SiteData = {
   tagline: "Editor de video · Programación web · Community Manager",
   heroDesc: "Edito videos que detienen el scroll, programo páginas web sencillas y tengo experiencia como community manager gestionando las redes de marcas. Todo lo que tu marca necesita para verse y crecer en digital.",
   available: true,
-  heroSide: "left",
+  heroSide: "right",
   heroMediaPath: "",
   heroMediaType: "",
   aboutTitle: "Edito, programo y hago crecer marcas",
