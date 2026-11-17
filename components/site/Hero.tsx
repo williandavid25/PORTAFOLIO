@@ -238,12 +238,21 @@ export default function Hero({ site, mediaUrl, reelHref }: Props) {
           <div className="hc">
             <div className="hvis">
               <div className="hvis-par">
+                {/* Piso: la luz de atrás se derrama hacia adelante y deja sombra de contacto bajo el sillón. */}
+                <div className="hfloor-glow" aria-hidden="true" />
+                <div className="hshadow" aria-hidden="true" />
                 <div className="hvis-media">
                   {mediaUrl ? (
                     isVideo ? (
-                      <video src={mediaUrl} autoPlay muted loop playsInline preload="auto" aria-label={site.name} />
+                      <video src={mediaUrl} autoPlay muted loop playsInline preload="auto" aria-label={site.name} className="hmain" />
                     ) : (
-                      <Image src={mediaUrl} alt={site.name} fill priority quality={90} sizes="(max-width: 900px) 90vw, 45vw" />
+                      <>
+                        {/* Original sin optimizar ni comprimir: se ve tal cual se subió. */}
+                        <Image src={mediaUrl} alt={site.name} fill priority unoptimized className="hmain" />
+                        <div className="hreflect" aria-hidden="true">
+                          <Image src={mediaUrl} alt="" fill quality={75} sizes="(max-width: 900px) 90vw, 45vw" />
+                        </div>
+                      </>
                     )
                   ) : (
                     <div className="hvis-ph">

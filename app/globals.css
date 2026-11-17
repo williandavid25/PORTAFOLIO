@@ -473,3 +473,27 @@ textarea.fi { resize: vertical; min-height: 130px; }
 .pillar li { position: relative; padding-left: 20px; font-size: 14px; color: var(--g1); }
 .pillar li::before { content: ""; position: absolute; left: 0; top: 0.62em; width: 10px; height: 1px; background: var(--acc2); }
 @media (max-width: 900px) { .pillars { grid-template-columns: 1fr; } }
+
+/* ============ FOTO DEL HERO: bordes fundidos, piso con luz, sombra y reflejo ============ */
+.hvis-par { padding-bottom: 4%; }
+.hvis-media img.hmain, .hvis-media video.hmain {
+  object-fit: contain; object-position: bottom center;
+  -webkit-mask-image: radial-gradient(ellipse 60% 64% at 50% 44%, #000 66%, transparent 100%);
+  mask-image: radial-gradient(ellipse 60% 64% at 50% 44%, #000 66%, transparent 100%);
+  filter: drop-shadow(0 26px 40px rgba(0, 0, 0, 0.55)) saturate(1.04) contrast(1.03);
+}
+.hfloor-glow {
+  position: absolute; left: 50%; bottom: -4%; width: 150%; height: 30%; transform: translateX(-50%); pointer-events: none;
+  background: radial-gradient(ellipse 46% 52% at 50% 62%, rgba(255, 112, 34, 0.34) 0%, rgba(255, 90, 0, 0.14) 42%, transparent 74%);
+}
+.hshadow {
+  position: absolute; left: 50%; bottom: 3%; width: 64%; height: 9%; transform: translateX(-50%); pointer-events: none;
+  background: radial-gradient(ellipse at 50% 45%, rgba(0, 0, 0, 0.88) 0%, rgba(0, 0, 0, 0.55) 38%, transparent 72%);
+  filter: blur(7px);
+}
+.hreflect { position: absolute; left: 0; right: 0; top: 100%; height: 100%; pointer-events: none; opacity: 0.2; }
+.hvis-media .hreflect img {
+  transform: scaleY(-1); object-fit: contain; object-position: bottom center; filter: blur(3px);
+  -webkit-mask-image: linear-gradient(to top, #000 0%, transparent 22%);
+  mask-image: linear-gradient(to top, #000 0%, transparent 22%);
+}
