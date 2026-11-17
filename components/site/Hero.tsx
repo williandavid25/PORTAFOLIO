@@ -202,8 +202,6 @@ export default function Hero({ site, mediaUrl }: Props) {
                       <video src={mediaUrl} autoPlay muted loop playsInline preload="auto" aria-label={site.name} className="hmain" />
                     ) : (
                       <>
-                        {/* Luz única: continúa la luz naranja que trae la foto en su lado derecho. */}
-                        <span className="hvis-light" aria-hidden="true" />
                         {/* Original sin optimizar ni comprimir: se ve tal cual se subió. */}
                         {/* eslint-disable-next-line @next/next/no-img-element */}
                         <img src={mediaUrl} alt={site.name} className="hmain" fetchPriority="high" decoding="async" />
