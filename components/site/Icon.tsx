@@ -33,7 +33,7 @@ export default function Icon({ name, size = 16, stroke = 1.8, className }: { nam
 
 export function PlayIcon({ size = 14 }: { size?: number }) {
   return (
-    <svg width={size} height={size} viewBox="0 0 24 24" fill="#fff" aria-hidden="true" style={{ marginLeft: 2 }}>
+    <svg width={size} height={size} viewBox="0 0 24 24" fill="currentColor" aria-hidden="true" style={{ marginLeft: 2 }}>
       <polygon points="6 3 20 12 6 21 6 3" />
     </svg>
   );
