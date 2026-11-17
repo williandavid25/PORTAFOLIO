@@ -1,6 +1,6 @@
 import { ImageResponse } from "next/og";
 
-/** Ícono de la app: “W” cursiva sobre esfera naranja (mismo estilo que el logo). */
+/** Ícono de la app: “D” (DevWilly) cursiva sobre esfera naranja (mismo estilo que el logo). */
 export function renderIcon(size: number, rounded = true) {
   return new ImageResponse(
     (
@@ -18,7 +18,7 @@ export function renderIcon(size: number, rounded = true) {
             boxShadow: `0 0 ${size * 0.12}px rgba(255,106,19,.6)`,
           }}
         >
-          W
+          D
         </div>
       </div>
     ),

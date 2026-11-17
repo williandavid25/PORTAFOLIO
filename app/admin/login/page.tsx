@@ -12,7 +12,7 @@ export default async function LoginPage() {
     <div className="login">
       <div className="hglow" />
       <div className="login-card">
-        <span className="logo"><span className="logo-mark">W</span><span className="logo-txt"><b>Panel</b><i>Solo administrador</i></span></span>
+        <span className="logo"><span className="logo-mark">D</span><span className="logo-txt"><b>Panel</b><i>Solo administrador</i></span></span>
         <h1>Bienvenido <em>de vuelta</em></h1>
         <p>Entra para subir videos y editar tu portafolio.</p>
         {configured ? <LoginForm /> : <div className="alert warn">El panel todavía no está conectado a la base de datos. Falta configurar Supabase (te guío en un paso).</div>}

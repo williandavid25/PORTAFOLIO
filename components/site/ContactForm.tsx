@@ -3,7 +3,7 @@
 import { useState, type FormEvent } from "react";
 import Icon from "./Icon";
 
-const TYPES = ["Contenido para redes", "Video publicitario", "Video corporativo", "YouTube / Streaming", "Motion Graphics", "Otro"];
+const TYPES = ["Edición de video para redes", "Video publicitario", "Video corporativo", "YouTube / Streaming", "Motion Graphics", "Página o herramienta web", "Community management", "Otro"];
 
 export default function ContactForm() {
   const [state, setState] = useState<{ status: "idle" | "sending" | "ok" | "err"; msg?: string }>({ status: "idle" });

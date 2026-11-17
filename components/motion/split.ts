@@ -31,11 +31,15 @@ export function splitChars(el: HTMLElement): HTMLElement[] {
   const text = el.textContent ?? "";
   el.textContent = "";
   el.dataset.charsDone = "1";
-  return Array.from(text).map((c) => {
+  const out: HTMLElement[] = [];
+  Array.from(text).forEach((c) => {
+    // Los espacios quedan como texto normal para que la línea pueda partirse en el celular.
+    if (c === " ") return void el.appendChild(document.createTextNode(" "));
     const s = document.createElement("span");
     s.className = "lc";
-    s.textContent = c === " " ? " " : c;
+    s.textContent = c;
     el.appendChild(s);
-    return s;
+    out.push(s);
   });
+  return out;
 }

@@ -126,6 +126,21 @@ export default function ProfileForm({ initial, heroSrc, aboutSrc }: Props) {
       </div>
 
       <div className="panel">
+        <h2>Herramientas</h2>
+        <p className="hint" style={{ marginTop: -8, marginBottom: 16, fontSize: 13, color: "var(--g3)" }}>Separa cada herramienta con una coma.</p>
+        {d.tools.map((g, i) => (
+          <div className="grid2" key={i} style={{ alignItems: "end" }}>
+            <div className="f"><label htmlFor={`tg-${i}`}>Grupo</label><input id={`tg-${i}`} className="in" value={g.group} maxLength={40} onChange={(e) => set("tools", d.tools.map((x, j) => (j === i ? { ...x, group: e.target.value } : x)))} /></div>
+            <div className="f"><label htmlFor={`ti-${i}`}>Herramientas</label><input id={`ti-${i}`} className="in" defaultValue={g.items.join(", ")} onBlur={(e) => set("tools", d.tools.map((x, j) => (j === i ? { ...x, items: e.target.value.split(",").map((s) => s.trim()).filter(Boolean).slice(0, 16) } : x)))} /></div>
+          </div>
+        ))}
+        <div className="actions">
+          {d.tools.length < 4 && <button className="btn btn-sm btn-o" onClick={() => set("tools", [...d.tools, { group: "Nuevo grupo", items: [] }])}>+ Añadir grupo</button>}
+          {d.tools.length > 0 && <button className="btn btn-sm btn-d" onClick={() => set("tools", d.tools.slice(0, -1))}>Quitar último grupo</button>}
+        </div>
+      </div>
+
+      <div className="panel">
         <h2>Cifras</h2>
         <div className="kpis" style={{ marginBottom: 0 }}>
           {([["projects", "Proyectos"], ["clients", "Clientes"], ["years", "Años de experiencia"], ["satisfaction", "Satisfacción %"]] as const).map(([k, label]) => (

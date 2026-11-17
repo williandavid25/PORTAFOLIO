@@ -20,6 +20,8 @@ const SERVICES = [
   { icon: "playc", title: "YouTube & Streaming", text: "Edición profesional para creadores: intros, outros, thumbnails animados y motion graphics personalizados." },
   { icon: "pen", title: "Color Grading", text: "Corrección y gradación de color profesional con estética cinematográfica." },
   { icon: "pulse", title: "Motion Graphics", text: "Animaciones tipográficas, intros dinámicas y gráficos en movimiento que elevan tu contenido." },
+  { icon: "code", title: "Desarrollo Web", text: "Páginas y herramientas web a medida, programadas en Visual Studio Code y versionadas en GitHub, listas para publicarse." },
+  { icon: "users", title: "Community Management", text: "Gestiono tus redes: calendario de contenido, publicaciones, respuesta a la comunidad y reporte de resultados." },
 ];
 
 const STEPS = [
@@ -31,7 +33,7 @@ const STEPS = [
   { icon: "send", title: "Entrega", text: "Exportación optimizada para cada plataforma y formato." },
 ];
 
-const MARQUEE = ["Reels", "Publicidad", "Color Grading", "Motion Graphics", "YouTube", "Corporativo"];
+const MARQUEE = ["Edición de video", "Desarrollo web", "Community Manager", "Reels", "Motion Graphics", "Color Grading"];
 
 export default async function HomePage() {
   const [site, projects, testimonials] = await Promise.all([getSite(), getProjects(), getTestimonials()]);
@@ -103,6 +105,20 @@ export default async function HomePage() {
               <Link href="/#contacto" className="btn btn-p" data-magnetic>Trabajemos juntos</Link>
               {site.cvUrl && <a href={site.cvUrl} className="btn btn-o" target="_blank" rel="noopener noreferrer" data-magnetic>Descargar CV</a>}
             </div>
+          </div>
+        </div>
+      </section>
+
+      <section className="section tools-sec" id="herramientas">
+        <div className="container">
+          <SectionTitle main="Herramientas" script="con lo que trabajo" center />
+          <div className="tools-grid">
+            {site.tools.map((g, i) => (
+              <div className="tools-card" key={g.group} data-crew={i % 2 ? "drag-right" : "drag-left"}>
+                <div className="tools-head"><span className="tools-num">0{i + 1}</span><h3>{g.group}</h3></div>
+                <ul className="chips">{g.items.map((t) => <li key={t}>{t}</li>)}</ul>
+              </div>
+            ))}
           </div>
         </div>
       </section>

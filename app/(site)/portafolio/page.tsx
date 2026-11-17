@@ -7,7 +7,7 @@ import SectionTitle from "@/components/site/SectionTitle";
 export const revalidate = 60;
 export const metadata: Metadata = {
   title: "Portafolio",
-  description: "Reels, comerciales, videos corporativos y motion graphics editados por Willy.",
+  description: "Reels, comerciales, videos corporativos y motion graphics editados por DevWilly.",
 };
 
 export default async function PortfolioPage() {

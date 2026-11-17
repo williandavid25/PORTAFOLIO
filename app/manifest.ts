@@ -2,9 +2,9 @@ import type { MetadataRoute } from "next";
 
 export default function manifest(): MetadataRoute.Manifest {
   return {
-    name: "Willy — Video Editor",
-    short_name: "Willy",
-    description: "Portafolio de edición de video, reels y motion graphics.",
+    name: "DevWilly — Editor, Programador y Community Manager",
+    short_name: "DevWilly",
+    description: "Portafolio de edición de video, desarrollo web y community management.",
     id: "/",
     start_url: "/",
     scope: "/",

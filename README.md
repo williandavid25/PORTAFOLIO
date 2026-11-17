@@ -1,9 +1,9 @@
-# Willy — Portafolio (web + app)
+# DevWilly — Portafolio (web + app)
 
-Sitio y aplicación instalable (PWA) de portafolio para un editor de video. Hecho con **Next.js 16**, **Supabase** (base de datos, inicio de sesión y almacenamiento de videos) y **GSAP + Lenis** para las animaciones.
+Sitio y aplicación instalable (PWA) de portafolio para un editor de video, programador y community manager. Hecho con **Next.js 16**, **Supabase** (base de datos, inicio de sesión y almacenamiento de videos) y **GSAP + Lenis** para las animaciones.
 
 ## Qué incluye
-- **Sitio público**: portada estilo referencia (resplandor naranja, foto/video 3D que se inclina con el mouse o con el giro del teléfono), brasas interactivas que responden a **varios punteros a la vez** (multitáctil), showreel con reproducción automática, portafolio con filtros y **vista previa de video al pasar el mouse** (o al desplazarse en el celular), página propia por video, proceso, testimonios, contacto.
+- **Sitio público**: portada estilo referencia (resplandor naranja, foto/video 3D que se inclina con el mouse o con el giro del teléfono), un equipo de punteros en blanco y negro que construye cada sección mientras bajas, títulos estilo “Portfolio” con firma manuscrita, herramientas (edición, programación, community manager), showreel con reproducción automática, portafolio con filtros y **vista previa de video al pasar el mouse** (o al desplazarse en el celular), página propia por video, proceso, testimonios, contacto.
 - **Panel admin** (`/admin`): subir videos con barra de progreso, miniatura automática, detección de formato vertical/horizontal, destacar, ocultar, reordenar y borrar; editar perfil, foto 3D, cifras, redes; testimonios; bandeja de mensajes.
 - **App instalable**: manifiesto, íconos y modo pantalla completa en el celular.
 

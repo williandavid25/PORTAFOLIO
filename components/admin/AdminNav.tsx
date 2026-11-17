@@ -27,7 +27,7 @@ export default function AdminNav({ unread }: { unread: number }) {
   const path = usePathname();
   return (
     <aside className="adm-side">
-      <Link href="/" className="logo"><span className="logo-mark">W</span><span className="logo-txt"><b>Panel</b><i>Portafolio</i></span></Link>
+      <Link href="/" className="logo"><span className="logo-mark">D</span><span className="logo-txt"><b>Panel</b><i>Portafolio</i></span></Link>
       {LINKS.map((l) => {
         const on = l.href === "/admin" ? path === "/admin" : path.startsWith(l.href);
         return (

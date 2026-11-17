@@ -38,20 +38,25 @@ export const siteSchema = z.object({
   location: z.string().trim().max(80),
   cvUrl: url,
   socials: z.object({ instagram: url, tiktok: url, youtube: url, facebook: url }),
+  /** Herramientas que usa, en grupos (Edición, Programación, Community). */
+  tools: z.array(z.object({
+    group: z.string().trim().min(1).max(40),
+    items: z.array(z.string().trim().min(1).max(40)).max(16),
+  })).max(4),
 });
 export type SiteData = z.infer<typeof siteSchema>;
 
 export const DEFAULT_SITE: SiteData = {
-  name: "Willy",
-  role: "Video Editor",
-  tagline: "Video Editor & Content Creator",
-  heroDesc: "Transformo ideas en historias visuales impactantes. Desde reels que detienen el scroll hasta producciones corporativas que convierten.",
+  name: "DevWilly",
+  role: "Editor & Developer",
+  tagline: "Video Editor · Programador · Community Manager",
+  heroDesc: "Edito videos que detienen el scroll, programo páginas y herramientas web, y gestiono comunidades en redes. Todo lo que tu marca necesita para verse y crecer en digital.",
   available: true,
   heroSide: "left",
   heroMediaPath: "",
   heroMediaType: "",
-  aboutTitle: "Edito videos que generan resultados",
-  bio: "Soy un editor de video especializado en contenido para redes sociales, campañas publicitarias y producciones corporativas. Mi enfoque combina la narrativa visual con la estrategia de contenido para crear piezas que no solo se ven bien, sino que convierten y generan engagement real.",
+  aboutTitle: "Edito, programo y hago crecer marcas",
+  bio: "Soy editor de video especializado en contenido para redes sociales, campañas publicitarias y producciones corporativas. Además soy programador: creo páginas y herramientas web con Visual Studio Code y GitHub. Y como community manager gestiono las redes de las marcas: planifico el contenido, publico, respondo a la comunidad y mido los resultados.",
   aboutImagePath: "",
   skills: [
     { name: "Premiere Pro", level: 95 },
@@ -65,6 +70,11 @@ export const DEFAULT_SITE: SiteData = {
   location: "Ecuador",
   cvUrl: "",
   socials: { instagram: "", tiktok: "", youtube: "", facebook: "" },
+  tools: [
+    { group: "Edición de video", items: ["Premiere Pro", "After Effects", "DaVinci Resolve"] },
+    { group: "Programación", items: ["Visual Studio Code", "Git", "GitHub", "HTML", "CSS", "JavaScript"] },
+    { group: "Community Manager", items: ["Instagram", "TikTok", "Facebook", "YouTube"] },
+  ],
 };
 
 /** Mezcla lo guardado con los valores por defecto y descarta lo inválido. */

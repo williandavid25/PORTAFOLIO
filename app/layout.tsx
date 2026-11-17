@@ -15,11 +15,11 @@ const siteUrl = process.env.NEXT_PUBLIC_SITE_URL ?? "http://localhost:3000";
 
 export const metadata: Metadata = {
   metadataBase: new URL(siteUrl),
-  title: { default: "Willy — Video Editor & Content Creator", template: "%s · Willy" },
-  description: "Editor de video y creador de contenido: reels, publicidad, video corporativo, color grading y motion graphics.",
-  applicationName: "Willy Portfolio",
-  appleWebApp: { capable: true, title: "Willy", statusBarStyle: "black-translucent" },
-  openGraph: { type: "website", locale: "es_EC", siteName: "Willy — Video Editor" },
+  title: { default: "DevWilly — Video Editor, Programador y Community Manager", template: "%s · DevWilly" },
+  description: "DevWilly: editor de video, programador y community manager. Reels, publicidad, video corporativo, motion graphics, desarrollo web y gestión de redes.",
+  applicationName: "DevWilly",
+  appleWebApp: { capable: true, title: "DevWilly", statusBarStyle: "black-translucent" },
+  openGraph: { type: "website", locale: "es_EC", siteName: "DevWilly" },
   formatDetection: { telephone: false },
 };
 
