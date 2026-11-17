@@ -497,3 +497,42 @@ textarea.fi { resize: vertical; min-height: 130px; }
   -webkit-mask-image: linear-gradient(to top, #000 0%, transparent 22%);
   mask-image: linear-gradient(to top, #000 0%, transparent 22%);
 }
+
+/* ============ PORTADA: foto quieta, escenario con piso, luz y sombras ============ */
+.hfloor { height: 16%; z-index: 2; }
+.hstage-floor {
+  position: absolute; left: 0; right: 0; bottom: 0; height: 30%; z-index: 3; pointer-events: none;
+  background:
+    radial-gradient(ellipse 30% 55% at 28% 22%, rgba(255, 122, 48, 0.2), transparent 70%),
+    linear-gradient(to bottom, rgba(255, 140, 70, 0.05), transparent 45%);
+  border-top: 1px solid rgba(255, 170, 110, 0.05);
+}
+.hero[data-side="right"] .hstage-floor { background: radial-gradient(ellipse 30% 55% at 72% 22%, rgba(255, 122, 48, 0.2), transparent 70%), linear-gradient(to bottom, rgba(255, 140, 70, 0.05), transparent 45%); }
+.hvis-media.has-photo { aspect-ratio: auto; width: auto; height: 100%; max-width: 100%; }
+.hvis-media.has-photo img.hmain {
+  position: relative; z-index: 2; display: block; height: 100%; width: auto; max-width: none; object-fit: contain;
+  -webkit-mask-image: none; mask-image: none;
+  filter: drop-shadow(0 24px 28px rgba(0, 0, 0, 0.45)) drop-shadow(-8px -6px 26px rgba(255, 110, 40, 0.16));
+}
+.hshadow-amb {
+  position: absolute; z-index: 1; left: 50%; bottom: -3.5%; width: 110%; height: 10%; transform: translateX(-50%); border-radius: 50%;
+  background: radial-gradient(ellipse at 50% 40%, rgba(0, 0, 0, 0.72), rgba(0, 0, 0, 0.34) 45%, transparent 72%); filter: blur(10px);
+}
+.hcontact {
+  position: absolute; z-index: 1; bottom: -1.4%; width: 32%; height: 4.2%; transform: translateX(-50%); border-radius: 50%;
+  background: radial-gradient(ellipse at 50% 45%, rgba(0, 0, 0, 0.92), rgba(0, 0, 0, 0.5) 50%, transparent 76%); filter: blur(4px);
+}
+.hcontact-l { left: 17%; }
+.hcontact-r { left: 83%; }
+.hvis-media .hreflect-img {
+  position: absolute; z-index: 0; left: 0; top: 100%; width: 100%; height: 100%; transform: scaleY(-1); opacity: 0.13; pointer-events: none;
+  object-fit: contain; object-position: bottom center; filter: blur(2px);
+  -webkit-mask-image: linear-gradient(to top, #000, transparent 18%); mask-image: linear-gradient(to top, #000, transparent 18%);
+}
+.hplay { display: none; }
+/* La foto ocupa exactamente el alto disponible del hero, sin empujar el diseño. */
+@media (min-width: 901px) {
+  .hc { grid-template-rows: minmax(0, 1fr); }
+  .hvis, .hvis-par { min-height: 0; }
+}
+.hvis-media.has-photo { min-height: 0; }
