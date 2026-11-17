@@ -1,6 +1,7 @@
 "use client";
 
 import Link from "next/link";
+import Image from "next/image";
 import { useEffect, useRef } from "react";
 import gsap from "gsap";
 import { onReady, splitChars, splitWords } from "@/components/motion/MotionRoot";
@@ -242,8 +243,7 @@ export default function Hero({ site, mediaUrl, reelHref }: Props) {
                     isVideo ? (
                       <video src={mediaUrl} autoPlay muted loop playsInline preload="auto" aria-label={site.name} />
                     ) : (
-                      // eslint-disable-next-line @next/next/no-img-element
-                      <img src={mediaUrl} alt={site.name} fetchPriority="high" />
+                      <Image src={mediaUrl} alt={site.name} fill priority quality={90} sizes="(max-width: 900px) 90vw, 45vw" />
                     )
                   ) : (
                     <div className="hvis-ph">

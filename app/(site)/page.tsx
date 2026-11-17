@@ -1,4 +1,5 @@
 import Link from "next/link";
+import Image from "next/image";
 import Loader from "@/components/site/Loader";
 import Hero from "@/components/site/Hero";
 import Showreel from "@/components/site/Showreel";
@@ -96,8 +97,7 @@ export default async function HomePage() {
           <div className="about-pic" data-crew="drag-left">
             <div className="about-frame">
               {aboutImg ? (
-                // eslint-disable-next-line @next/next/no-img-element
-                <img src={aboutImg} alt={site.name} loading="lazy" data-parallax />
+                <Image src={aboutImg} alt={site.name} fill quality={90} sizes="(max-width: 900px) 92vw, 45vw" data-parallax />
               ) : (
                 <div className="about-ph"><Icon name="user" size={40} stroke={1.2} /></div>
               )}

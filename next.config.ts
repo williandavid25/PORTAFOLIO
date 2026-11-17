@@ -37,6 +37,13 @@ const securityHeaders = [
 
 const nextConfig: NextConfig = {
   poweredByHeader: false,
+  // Fotos: el original queda intacto en Supabase; el optimizador entrega a cada
+  // pantalla una copia del tamaño justo con calidad alta (90).
+  images: {
+    remotePatterns: supabaseHost ? [{ protocol: "https", hostname: supabaseHost, pathname: "/storage/v1/object/public/portafolio/**" }] : [],
+    qualities: [75, 90],
+    formats: ["image/avif", "image/webp"],
+  },
   async headers() {
     return [{ source: "/:path*", headers: securityHeaders }];
   },

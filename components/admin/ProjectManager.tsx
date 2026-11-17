@@ -5,7 +5,7 @@ import { useRouter, useSearchParams } from "next/navigation";
 import { CATEGORIES, CATEGORY_KEYS, type Category, type Project } from "@/lib/content";
 import { externalThumb, embedUrl } from "@/lib/video";
 import { deleteProjectAction, reorderProjectsAction, saveProjectAction, toggleProjectAction } from "@/app/admin/actions";
-import { checkFile, fileName, inspectVideo, shrinkImage, uploadFile } from "./upload";
+import { checkFile, fileName, inspectVideo, uploadFile } from "./upload";
 
 type Row = Project & { videoSrc: string | null; thumbSrc: string | null };
 
@@ -135,7 +135,7 @@ function ProjectForm({ row, onClose }: { row: Row | null; onClose: (saved: boole
     const problem = checkFile(f, "image");
     if (problem) return setError(problem);
     setError(null);
-    const b = await shrinkImage(f, 1600);
+    const b: Blob = f; // miniatura original, sin comprimir
     setThumbBlob(b);
     setThumbPreview(URL.createObjectURL(b));
   }

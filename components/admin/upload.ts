@@ -56,11 +56,11 @@ export function inspectVideo(file: File): Promise<{ aspect: "16:9" | "9:16" | "1
     v.onseeked = () => {
       const ratio = v.videoWidth / v.videoHeight || 16 / 9;
       const aspect = ratio > 1.3 ? "16:9" : ratio < 0.7 ? "9:16" : ratio < 0.9 ? "4:5" : "1:1";
-      const scale = Math.min(1, 1280 / Math.max(v.videoWidth, v.videoHeight));
+      const scale = 1; // miniatura a la resolución completa del video
       const c = document.createElement("canvas");
       c.width = Math.round(v.videoWidth * scale); c.height = Math.round(v.videoHeight * scale);
       c.getContext("2d")?.drawImage(v, 0, 0, c.width, c.height);
-      c.toBlob((b) => done({ aspect, thumb: b, duration: v.duration }), "image/jpeg", 0.85);
+      c.toBlob((b) => done({ aspect, thumb: b, duration: v.duration }), "image/jpeg", 0.95);
     };
     v.onerror = () => done({ aspect: "16:9", thumb: null, duration: 0 });
   });

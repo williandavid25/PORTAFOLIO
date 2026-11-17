@@ -4,7 +4,7 @@ import { useState } from "react";
 import { useRouter } from "next/navigation";
 import type { SiteData } from "@/lib/content";
 import { saveSiteAction } from "@/app/admin/actions";
-import { checkFile, fileName, shrinkImage, uploadFile } from "./upload";
+import { checkFile, fileName, uploadFile } from "./upload";
 
 type Props = { initial: SiteData; heroSrc: string | null; aboutSrc: string | null };
 
@@ -35,7 +35,8 @@ export default function ProfileForm({ initial, heroSrc, aboutSrc }: Props) {
     try {
       setBusy(true);
       const isVideo = f.type.startsWith("video/");
-      const blob = isVideo ? f : await shrinkImage(f, kind === "hero" ? 2000 : 1600);
+      // Se sube el archivo original, sin comprimir: máxima calidad (hasta 50 MB).
+      const blob: Blob = f;
       const path = `site/${crypto.randomUUID()}/${fileName(kind, blob.type || f.type)}`;
       await uploadFile(path, blob, setProgress);
       setProgress(null);
