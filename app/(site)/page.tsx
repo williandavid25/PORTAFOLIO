@@ -55,7 +55,7 @@ export default async function HomePage() {
               {MARQUEE.map((m, i) => (
                 <span key={m} style={{ display: "contents" }}>
                   <span className={i % 2 ? "o" : ""}>{m}</span>
-                  <span className="star">✦</span>
+                  <span className="sep" aria-hidden="true" />
                 </span>
               ))}
             </div>

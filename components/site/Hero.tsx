@@ -3,7 +3,6 @@
 import Link from "next/link";
 import { useEffect, useRef } from "react";
 import gsap from "gsap";
-import EmberField from "@/components/motion/EmberField";
 import { onReady, splitWords } from "@/components/motion/MotionRoot";
 import { Crew, showCrew } from "@/components/motion/Crew";
 import Icon, { PlayIcon } from "./Icon";
@@ -69,10 +68,9 @@ export default function Hero({ site, mediaUrl, reelHref }: Props) {
         const m2 = crew.next();
         const stretcher = crew.cursor(m2, "estirando");
         const frame = crew.frame(m2);
-        const dim = frame.querySelector<HTMLElement>(".dim")!;
         tl.fromTo(frame, { x: () => M().x, y: () => M().y + M().h, width: () => M().w, height: 0, opacity: 0 }, { opacity: 1, duration: 0.15 }, 0.25)
           .fromTo(stretcher, { x: () => M().x + M().w + 60, y: () => M().y + M().h + 40, opacity: 0 }, { x: () => M().x + M().w, y: () => M().y + M().h, opacity: 1, duration: 0.3, ease: "power2.out" }, 0.1)
-          .to(frame, { y: () => M().y, height: () => M().h, duration: 1.8, ease: "expo.inOut", onUpdate: () => { dim.textContent = `${Math.round(M().w)} × ${Math.round(Number(gsap.getProperty(frame, "height")))}`; } }, 0.25)
+          .to(frame, { y: () => M().y, height: () => M().h, duration: 1.8, ease: "expo.inOut" }, 0.25)
           .to(stretcher, { y: () => M().y, duration: 1.8, ease: "expo.inOut" }, 0.25)
           .to(frame, { opacity: 0, duration: 0.4 }, 2.2)
           .to(stretcher, { x: "+=60", y: "-=30", opacity: 0, duration: 0.4, ease: "power2.in" }, 2.15);
@@ -139,7 +137,6 @@ export default function Hero({ site, mediaUrl, reelHref }: Props) {
           <div className="hglow" />
           <div className="hglow2" />
           <div className="hgrid" />
-          <EmberField />
           <div className="hc">
             <div className="hvis">
               <div className="hvis-par">

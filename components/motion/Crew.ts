@@ -4,189 +4,110 @@ import gsap from "gsap";
 import { splitChars, splitWords } from "./split";
 
 /**
- * “El equipo”: 20 punteros de colores (12 en el celular) que viven siempre en
- * pantalla y reconstruyen la página mientras bajas.
- *
- * - Cada sección tiene “trabajos” (escribir, firmar, estirar, arrastrar, llenar,
- *   contar, trazar, seleccionar) ligados al scroll. Un trabajo no mueve un puntero
- *   directamente: mueve una “sonda” invisible. El puntero asignado sigue la sonda
- *   mientras el trabajo está en curso. Así subir y bajar nunca hace saltar nada.
- * - Cuando un puntero está libre, no desaparece: va a otro bloque visible y sigue
- *   trabajando (seleccionar, ajustar, corregir texto, medir).
- *
- * Rendimiento: un solo bucle (ticker de GSAP), solo transform/opacity, se pausa
- * solo cuando la pestaña está oculta (requestAnimationFrame).
+ * “El equipo”: hasta 20 punteros en blanco y negro (12 en el celular) que
+ * construyen la página mientras bajas. Cada trabajo (escribir, firmar, estirar,
+ * arrastrar, llenar, contar, trazar, seleccionar) mueve una “sonda” invisible
+ * ligada al scroll; el puntero asignado aparece solo para hacer ese trabajo,
+ * lo sigue y se retira. Subir y bajar nunca hace saltar nada.
+ * Rendimiento: un solo bucle (ticker de GSAP) y solo transform/opacity.
  */
-export const CREW = [
-  { name: "Edición", color: "#ff6a13" }, { name: "Color", color: "#3b82f6" }, { name: "Motion", color: "#ec4899" },
-  { name: "Audio", color: "#22c55e" }, { name: "Guion", color: "#a855f7" }, { name: "Diseño", color: "#eab308" },
-  { name: "VFX", color: "#06b6d4" }, { name: "Dirección", color: "#ef4444" }, { name: "Render", color: "#14b8a6" },
-  { name: "Cliente", color: "#84cc16" }, { name: "Montaje", color: "#f97316" }, { name: "Cámara", color: "#6366f1" },
-  { name: "Subtítulos", color: "#d946ef" }, { name: "Luces", color: "#facc15" }, { name: "Grading", color: "#0ea5e9" },
-  { name: "Foley", color: "#10b981" }, { name: "3D", color: "#f43f5e" }, { name: "Tipografía", color: "#8b5cf6" },
-  { name: "Música", color: "#2dd4bf" }, { name: "Producción", color: "#fb923c" },
-] as const;
-type Member = (typeof CREW)[number];
+export const CREW_SIZE = 20;
+/** Tono de cada puntero: blanco con borde negro o negro con borde blanco. */
+type Member = { tone: "light" | "dark"; color: string };
+const LINE = "rgba(255,255,255,0.9)"; // marcos, selecciones y ondas: siempre blancos
 type Box = { x: number; y: number; w: number; h: number };
 type TlVars = gsap.TimelineVars;
 type Kind = "arrow" | "ibeam" | "pen";
 /** Punto invisible que animan los trabajos; el puntero real lo sigue. */
 export type Probe = { x: number; y: number; scale: number; opacity: number; verb: string; kind: Kind };
-type Task = { probe: Probe; tl: gsap.core.Timeline; agent: number };
+type Task = { probe: Probe; tl: gsap.core.Timeline; agent: number; el: Element | null; doneAt: number };
 
 const ICONS: Record<Kind, string> = {
-  arrow: '<svg class="i-arrow" viewBox="0 0 24 24" aria-hidden="true"><path d="M4 2.5l15.5 8.2-6.9 1.9-2.9 6.9z" fill="currentColor" stroke="#fff" stroke-width="1.6" stroke-linejoin="round"/></svg>',
-  ibeam: '<svg class="i-ibeam" viewBox="0 0 24 24" aria-hidden="true"><path d="M8 3h3a1 1 0 0 1 1 1v16a1 1 0 0 1-1 1H8M16 3h-3a1 1 0 0 0-1 1v16a1 1 0 0 0 1 1h3" fill="none" stroke="#fff" stroke-width="2.2" stroke-linecap="round"/></svg>',
-  pen: '<svg class="i-pen" viewBox="0 0 24 24" aria-hidden="true"><path d="M3 21l3.5-1 11-11-2.5-2.5-11 11zM14.5 6l2.5 2.5 2-2a1.77 1.77 0 0 0-2.5-2.5z" fill="currentColor" stroke="#fff" stroke-width="1.4" stroke-linejoin="round"/></svg>',
+  arrow: '<svg class="i-arrow" viewBox="0 0 24 24" aria-hidden="true"><path d="M4 2.5l15.5 8.2-6.9 1.9-2.9 6.9z" class="fill" stroke-width="1.6" stroke-linejoin="round"/></svg>',
+  ibeam: '<svg class="i-ibeam" viewBox="0 0 24 24" aria-hidden="true"><path d="M8 3h3a1 1 0 0 1 1 1v16a1 1 0 0 1-1 1H8M16 3h-3a1 1 0 0 0-1 1v16a1 1 0 0 0 1 1h3" class="halo" fill="none" stroke-width="4.6" stroke-linecap="round"/><path d="M8 3h3a1 1 0 0 1 1 1v16a1 1 0 0 1-1 1H8M16 3h-3a1 1 0 0 0-1 1v16a1 1 0 0 0 1 1h3" class="line" fill="none" stroke-width="2" stroke-linecap="round"/></svg>',
+  pen: '<svg class="i-pen" viewBox="0 0 24 24" aria-hidden="true"><path d="M3 21l3.5-1 11-11-2.5-2.5-11 11zM14.5 6l2.5 2.5 2-2a1.77 1.77 0 0 0-2.5-2.5z" class="fill" stroke-width="1.4" stroke-linejoin="round"/></svg>',
 };
-const IDLE = [
-  { verb: "revisando", kind: "arrow" }, { verb: "alineando", kind: "arrow" }, { verb: "seleccionando", kind: "arrow" },
-  { verb: "ajustando", kind: "arrow" }, { verb: "midiendo", kind: "arrow" }, { verb: "puliendo", kind: "arrow" },
-] as const;
-const TEXTY = ".stitle-main,.title,.lead,.hdesc,.hh,.card h3,.card p,.tcard p,.htag";
-const WORK_TARGETS = `${TEXTY},.card,.vcard,.stat,.skill,.step,.tcard,.form-card,.btn,.about-frame,.reel,.chip,.hbadge,.citem,.fbig`;
 
-function rgba(hex: string, a: number) {
-  const n = parseInt(hex.slice(1), 16);
-  return `rgba(${(n >> 16) & 255},${(n >> 8) & 255},${n & 255},${a})`;
-}
 const rand = (a: number, b: number) => a + Math.random() * (b - a);
 
 // =====================================================================
-// Director: los punteros permanentes y su bucle.
+// Director: los punteros y su bucle. Un puntero solo se ve cuando tiene
+// un trabajo por hacer cerca de la pantalla: llega, lo hace y se va.
 // =====================================================================
-type Agent = {
-  el: HTMLElement; small: HTMLElement; x: number; y: number;
-  tx: number; ty: number; next: number; verb: string; kind: Kind; idle: { verb: string; kind: Kind };
-  claim: HTMLElement | null;
-};
+type Agent = { el: HTMLElement; x: number; y: number; op: number; kind: Kind };
 
 class Director {
   readonly count: number;
   private agents: Agent[] = [];
   private tasks = new Set<Task>();
-  private flashes = 0;
   private visible = false;
-  private claimed = new Set<HTMLElement>();
   private overlay: HTMLDivElement;
 
   constructor(private layer: HTMLElement) {
-    this.count = window.innerWidth < 640 ? 12 : CREW.length;
+    this.count = window.innerWidth < 640 ? 12 : CREW_SIZE;
     this.overlay = document.createElement("div");
     this.overlay.className = "crew-agents";
     this.overlay.setAttribute("aria-hidden", "true");
     document.body.appendChild(this.overlay);
     for (let i = 0; i < this.count; i++) {
-      const m = CREW[i];
       const el = document.createElement("div");
-      el.className = "cc";
-      el.style.color = m.color;
-      el.style.setProperty("--c", m.color);
-      el.innerHTML = `${ICONS.arrow}${ICONS.ibeam}${ICONS.pen}<span class="cc-tag">${m.name}<small></small></span>`;
+      el.className = `cc ${i % 2 ? "tone-dark" : "tone-light"}`;
+      el.innerHTML = `${ICONS.arrow}${ICONS.ibeam}${ICONS.pen}`;
+      el.style.opacity = "0";
       this.overlay.appendChild(el);
-      const a: Agent = { el, small: el.querySelector("small")!, x: rand(0, innerWidth), y: rand(0, innerHeight), tx: 0, ty: 0, next: 0, verb: "", kind: "arrow", idle: IDLE[i % IDLE.length], claim: null };
-      a.tx = a.x; a.ty = a.y;
-      this.agents.push(a);
+      this.agents.push({ el, x: rand(0, innerWidth), y: rand(0, innerHeight), op: 0, kind: "arrow" });
     }
     gsap.ticker.add(this.tick);
   }
 
-  member(i: number): Member { return CREW[i % this.count]; }
+  member(i: number): Member { return { tone: i % 2 ? "dark" : "light", color: LINE }; }
   add(t: Task) { this.tasks.add(t); }
   remove(t: Task) { this.tasks.delete(t); }
-
-  /** Entran desde los bordes, escalonados. */
-  show() {
-    if (this.visible) return;
-    this.visible = true;
-    this.agents.forEach((a, i) => {
-      const side = i % 4;
-      a.x = side === 0 ? -40 : side === 1 ? innerWidth + 20 : rand(0, innerWidth);
-      a.y = side === 2 ? -40 : side === 3 ? innerHeight + 20 : rand(0, innerHeight);
-      a.next = 0;
-      gsap.fromTo(a.el, { opacity: 0 }, { opacity: 1, duration: 0.6, delay: 0.15 + i * 0.06 });
-    });
-  }
-
-  private pick(a: Agent, lr: DOMRect, now: number) {
-    const vw = innerWidth, vh = innerHeight;
-    const nodes = Array.from(document.querySelectorAll<HTMLElement>(WORK_TARGETS)).filter((n) => {
-      const r = n.getBoundingClientRect();
-      return r.width > 20 && r.bottom > 60 && r.top < vh - 40 && r.right > 0 && r.left < vw;
-    });
-    a.next = now + rand(2600, 5200);
-    if (a.claim) { this.claimed.delete(a.claim); a.claim = null; }
-    // Cada uno busca un bloque que nadie esté trabajando; si no hay, recorre el espacio libre.
-    const free = nodes.filter((n) => !this.claimed.has(n));
-    if (!free.length || Math.random() < 0.28) {
-      const side = Math.random() < 0.5;
-      const narrow = vw < 640;
-      a.tx = (side ? rand(0.02, narrow ? 0.3 : 0.16) : rand(narrow ? 0.45 : 0.84, narrow ? 0.72 : 0.92)) * vw - lr.left;
-      a.ty = rand(0.18, 0.88) * vh - lr.top;
-      a.idle = IDLE[Math.floor(Math.random() * IDLE.length)];
-      return;
-    }
-    const n = free[Math.floor(Math.random() * free.length)];
-    this.claimed.add(n);
-    a.claim = n;
-    const r = n.getBoundingClientRect();
-    const texty = n.matches(TEXTY) && Math.random() < 0.45;
-    // Un punto sobre el borde o dentro del bloque, en coordenadas de la página.
-    const edge = Math.random();
-    const px = texty ? r.left + rand(0.1, 0.9) * r.width : edge < 0.5 ? r.left + rand(0, 1) * r.width : (Math.random() < 0.5 ? r.left : r.right);
-    const py = texty ? r.top + r.height * rand(0.3, 0.7) : edge < 0.5 ? (Math.random() < 0.5 ? r.top : r.bottom) : r.top + rand(0, 1) * r.height;
-    a.tx = Math.min(vw - 40, Math.max(8, px)) - lr.left;
-    a.ty = py - lr.top;
-    a.idle = texty ? { verb: Math.random() < 0.5 ? "corrigiendo" : "escribiendo", kind: "ibeam" } : IDLE[Math.floor(Math.random() * IDLE.length)];
-    // A veces marca el bloque con un recuadro de selección, como en un editor.
-    if (!texty && this.flashes < 5 && Math.random() < 0.5) this.flash(n, CREW[this.agents.indexOf(a)].color, now);
-  }
-
-  private flash(n: HTMLElement, color: string, now: number) {
-    this.flashes++;
-    const lr = this.layer.getBoundingClientRect();
-    const r = n.getBoundingClientRect();
-    const f = document.createElement("div");
-    f.className = "crew-flash";
-    f.style.cssText = `left:${r.left - lr.left - 4}px;top:${r.top - lr.top - 4}px;width:${r.width + 8}px;height:${r.height + 8}px;border-color:${color};background:${rgba(color, 0.05)}`;
-    f.innerHTML = `<i class="tl" style="border-color:${color}"></i><i class="tr" style="border-color:${color}"></i><i class="bl" style="border-color:${color}"></i><i class="br" style="border-color:${color}"></i>`;
-    this.layer.appendChild(f);
-    void now;
-    gsap.timeline({ delay: 0.9, onComplete: () => { f.remove(); this.flashes--; } })
-      .fromTo(f, { opacity: 0, scale: 1.04 }, { opacity: 1, scale: 1, duration: 0.3, ease: "power2.out" })
-      .to(f, { opacity: 0, duration: 0.5 }, "+=0.9");
-  }
+  show() { this.visible = true; }
 
   private tick = () => {
     if (!this.visible) return;
     const lr = this.layer.getBoundingClientRect();
     const now = performance.now();
     const vw = innerWidth, vh = innerHeight;
-    const busy = new Map<number, Task>();
+    const near = (t: Task) => {
+      if (!t.el) return true;
+      const r = t.el.getBoundingClientRect();
+      return r.bottom > -vh * 0.1 && r.top < vh * 1.02;
+    };
+    // Para cada puntero: el trabajo en curso; si no, el próximo por empezar a la vista;
+    // si no, el que acaba de terminar (se queda un instante y se retira).
+    const best = new Map<number, { t: Task; rank: number }>();
     this.tasks.forEach((t) => {
       const p = t.tl.progress();
-      if (p > 0.0005 && p < 0.9995) busy.set(t.agent, t);
+      let rank = 0;
+      if (p > 0.0005 && p < 0.9995) { rank = 3; t.doneAt = 0; }
+      else if (p <= 0.0005 && near(t)) rank = 2;
+      else if (p >= 0.9995) { if (!t.doneAt) t.doneAt = now; if (now - t.doneAt < 900 && near(t)) rank = 1; }
+      if (!rank) return;
+      const cur = best.get(t.agent);
+      if (!cur || rank > cur.rank) best.set(t.agent, { t, rank });
     });
+
     this.agents.forEach((a, i) => {
-      const t = busy.get(i);
-      let tx: number, ty: number, k: number, verb: string, kind: Kind, scale = 1;
-      if (t) {
-        tx = t.probe.x + lr.left; ty = t.probe.y + lr.top; k = 0.32;
-        verb = t.probe.verb; kind = t.probe.kind; scale = t.probe.scale || 1;
-        a.next = now + rand(400, 1200); // al terminar, descansa un instante y sigue
-      } else {
-        let sy = a.ty + lr.top;
-        if (now > a.next || sy < 30 || sy > vh - 20) { this.pick(a, lr, now); sy = a.ty + lr.top; }
-        tx = a.tx + lr.left + Math.sin(now / 900 + i) * 7;
-        ty = sy + Math.cos(now / 1100 + i * 1.7) * 5;
-        k = 0.05; verb = a.idle.verb; kind = a.idle.kind;
+      const b = best.get(i);
+      if (!b) {
+        a.op += (0 - a.op) * 0.12;
+        a.el.style.opacity = a.op < 0.02 ? "0" : a.op.toFixed(3);
+        return;
       }
-      // Siempre dentro de la pantalla, con espacio para la etiqueta.
-      a.x += (Math.min(vw - (vw < 640 ? 84 : 130), Math.max(4, tx)) - a.x) * k;
-      a.y += (Math.min(vh - 22, Math.max(-6, ty)) - a.y) * k;
-      a.el.style.transform = `translate3d(${a.x.toFixed(1)}px,${a.y.toFixed(1)}px,0) scale(${scale})`;
-      if (verb !== a.verb) { a.verb = verb; a.small.textContent = verb; }
-      if (kind !== a.kind) { a.el.classList.remove(`k-${a.kind}`); a.el.classList.add(`k-${kind}`); a.kind = kind; }
+      const p = b.t.probe;
+      const tx = Math.min(vw - 26, Math.max(2, p.x + lr.left));
+      const ty = Math.min(vh - 26, Math.max(2, p.y + lr.top));
+      if (a.op < 0.05) { a.x = tx; a.y = ty; } // aparece en su sitio, no cruza la pantalla
+      const k = b.rank === 3 ? 0.35 : 0.12;
+      a.x += (tx - a.x) * k;
+      a.y += (ty - a.y) * k;
+      const target = b.rank === 1 ? Math.max(0, 1 - (now - b.t.doneAt) / 900) : 1;
+      a.op += (target - a.op) * 0.15;
+      a.el.style.opacity = a.op.toFixed(3);
+      a.el.style.transform = `translate3d(${a.x.toFixed(1)}px,${a.y.toFixed(1)}px,0) scale(${p.scale || 1})`;
+      if (p.kind !== a.kind) { a.el.classList.remove(`k-${a.kind}`); a.el.classList.add(`k-${p.kind}`); a.kind = p.kind; }
     });
   };
 
@@ -246,9 +167,9 @@ export class Crew {
     return p;
   }
   /** Une las sondas creadas a una línea de tiempo (para timelines propios, ej. el hero). */
-  bind(tl: gsap.core.Timeline) {
+  bind(tl: gsap.core.Timeline, el: Element | null = null) {
     this.pending.forEach((p) => {
-      const t: Task = { probe: p, tl, agent: (p as Probe & { agent: number }).agent };
+      const t: Task = { probe: p, tl, agent: (p as Probe & { agent: number }).agent, el, doneAt: 0 };
       this.tasks.push(t);
       this.dir.add(t);
     });
@@ -259,14 +180,14 @@ export class Crew {
     const f = document.createElement("div");
     f.className = "crew-frame";
     f.style.setProperty("--c", m.color);
-    f.innerHTML = '<i class="tl"></i><i class="tr"></i><i class="bl"></i><i class="br"></i><span class="dim"></span>';
+    f.innerHTML = '<i class="tl"></i><i class="tr"></i><i class="bl"></i><i class="br"></i>';
     return this.add(f);
   }
   sel(m: Member) {
     const s = document.createElement("div");
     s.className = "crew-sel";
     s.style.borderColor = m.color;
-    s.style.background = rgba(m.color, 0.1);
+    s.style.background = "rgba(255,255,255,0.06)";
     return this.add(s);
   }
   ripple(m: Member) {
@@ -279,7 +200,8 @@ export class Crew {
   private tl(vars: TlVars) {
     const t = gsap.timeline(vars);
     this.tls.push(t);
-    this.bind(t);
+    const trig = (vars.scrollTrigger as { trigger?: unknown } | undefined)?.trigger;
+    this.bind(t, trig instanceof Element ? trig : null);
     return t;
   }
 
@@ -339,14 +261,13 @@ export class Crew {
     const m = this.next();
     const c = this.cursor(m, "estirando");
     const f = this.frame(m);
-    const dim = f.querySelector<HTMLElement>(".dim")!;
     const B = () => this.box(el);
     const k = 0.16;
     const tl = this.tl(vars);
     tl.fromTo(c, { x: () => this.cx(B().x + B().w * k + 80), y: () => B().y + B().h * k + 70 }, { x: () => this.cx(B().x + B().w * k), y: () => B().y + B().h * k, duration: 0.25, ease: "power2.out" })
       .fromTo(f, { x: () => B().x, y: () => B().y, width: () => B().w * k, height: () => B().h * k, opacity: 0 }, { opacity: 1, duration: 0.08 }, "<0.15")
       .fromTo(el, { clipPath: () => `inset(0px ${B().w * (1 - k)}px ${B().h * (1 - k)}px 0px round ${radius}px)` }, { clipPath: `inset(-60px -60px -60px -60px round ${radius}px)`, duration: 0.6, ease: "power2.inOut" })
-      .to(f, { width: () => B().w, height: () => B().h, duration: 0.6, ease: "power2.inOut", onUpdate: () => { dim.textContent = `${Math.round(Number(gsap.getProperty(f, "width")))} × ${Math.round(Number(gsap.getProperty(f, "height")))}`; } }, "<")
+      .to(f, { width: () => B().w, height: () => B().h, duration: 0.6, ease: "power2.inOut" }, "<")
       .to(c, { x: () => this.cx(B().x + B().w), y: () => B().y + B().h, duration: 0.6, ease: "power2.inOut" }, "<")
       .to(f, { opacity: 0, duration: 0.15 })
       .to(c, { x: "+=30", y: "+=20", duration: 0.15 }, "<");
