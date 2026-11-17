@@ -621,3 +621,20 @@ textarea.fi { resize: vertical; min-height: 130px; }
 
 /* Con la foto a la derecha, el indicador de scroll va a la izquierda (no tapa los zapatos). */
 .hero[data-side="right"] .hscroll { right: auto; left: 40px; flex-direction: row-reverse; }
+
+/* ============ PORTADA: el fondo cubre SIEMPRE todo, en cualquier pantalla ============ */
+/* "cover" llena todo el ancho y alto; la posición vertical 76,1 % hace que la línea del
+   piso del fondo (al 76,1 % de la imagen) caiga siempre al 76,1 % del alto de la portada,
+   así coincide con el piso de la foto en cualquier tamaño o proporción de pantalla. */
+.hero[data-photo] .hero-card { background: #040303 url("/hero-stage.png") right 76.1% / cover no-repeat; }
+@media (max-width: 900px) {
+  /* En celular/tableta el estudio va detrás del bloque de la foto, de borde a borde. */
+  .hero[data-photo] .hero-card { background: #040303; }
+  .hero[data-photo] .hvis { position: relative; }
+  .hero[data-photo] .hvis::before {
+    content: ""; position: absolute; z-index: 0; top: 0; bottom: 0; left: -20px; right: -20px;
+    background: #040303 url("/hero-stage.png") right 76.1% / cover no-repeat;
+    -webkit-mask-image: linear-gradient(to bottom, transparent 0%, #000 32%); mask-image: linear-gradient(to bottom, transparent 0%, #000 32%);
+  }
+  .hero[data-photo] .hvis-par { position: relative; z-index: 1; }
+}
