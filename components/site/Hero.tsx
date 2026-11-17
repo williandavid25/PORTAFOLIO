@@ -196,22 +196,15 @@ export default function Hero({ site, mediaUrl }: Props) {
           <div className="hc">
             <div className="hvis">
               <div className="hvis-par">
-                {/* Piso: la luz de atrás se derrama hacia adelante y deja sombra de contacto bajo el sillón. */}
-                <div className="hfloor-glow" aria-hidden="true" />
                 <div className={`hvis-media${mediaUrl && !isVideo ? " has-photo" : ""}`}>
                   {mediaUrl ? (
                     isVideo ? (
                       <video src={mediaUrl} autoPlay muted loop playsInline preload="auto" aria-label={site.name} className="hmain" />
                     ) : (
                       <>
-                        <span className="hshadow-amb" aria-hidden="true" />
-                        <span className="hcontact hcontact-l" aria-hidden="true" />
-                        <span className="hcontact hcontact-r" aria-hidden="true" />
                         {/* Original sin optimizar ni comprimir: se ve tal cual se subió. */}
                         {/* eslint-disable-next-line @next/next/no-img-element */}
                         <img src={mediaUrl} alt={site.name} className="hmain" fetchPriority="high" decoding="async" />
-                        {/* eslint-disable-next-line @next/next/no-img-element */}
-                        <img src={mediaUrl} alt="" aria-hidden="true" className="hreflect-img" decoding="async" />
                       </>
                     )
                   ) : (
