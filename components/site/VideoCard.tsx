@@ -34,7 +34,10 @@ export default function VideoCard({ project, videoUrl, thumbUrl, tall }: Props) 
   }, []);
 
   return (
-    <Link href={`/portafolio/${project.slug}`} className={`vcard${tall ? " tall" : ""}${playing ? " playing" : ""}`} ref={cardRef} data-crew="stretch">
+    <Link href={`/portafolio/${project.slug}`} className={`vcard${tall ? "" : " wide"}${playing ? " playing" : ""}`} ref={cardRef} data-crew="stretch">
+      {/* Videos horizontales: se ven completos sobre su propia imagen desenfocada (como TikTok). */}
+      {/* eslint-disable-next-line @next/next/no-img-element */}
+      {!tall && thumbUrl && <img src={thumbUrl} alt="" aria-hidden="true" className="vcard-bg" loading="lazy" decoding="async" />}
       {thumbUrl ? (
         // eslint-disable-next-line @next/next/no-img-element
         <img src={thumbUrl} alt="" loading="lazy" decoding="async" />
