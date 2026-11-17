@@ -414,7 +414,7 @@ textarea.fi { resize: vertical; min-height: 130px; }
 .cc svg { display: none; }
 .cc .i-arrow, .cc.k-ibeam .i-ibeam, .cc.k-pen .i-pen { display: block; }
 .cc.k-ibeam .i-arrow, .cc.k-pen .i-arrow { display: none; }
-.cc svg { width: 22px; height: 22px; flex-shrink: 0; filter: drop-shadow(0 3px 6px rgba(0, 0, 0, 0.55)); }
+.cc svg { width: 22px; height: 22px; flex-shrink: 0; }
 .cc .i-ibeam { margin: -11px 0 0 -11px; }
 .cc .i-pen { margin: -20px 0 0 -3px; }
 .crew-flash { position: absolute; border: 1.5px solid; border-radius: 6px; pointer-events: none; }
@@ -436,7 +436,7 @@ textarea.fi { resize: vertical; min-height: 130px; }
 .cc.tone-dark .fill { fill: #0a0a0a; stroke: #fff; }
 .cc.tone-light .halo { stroke: #0a0a0a; } .cc.tone-light .line { stroke: #fff; }
 .cc.tone-dark .halo { stroke: #fff; } .cc.tone-dark .line { stroke: #0a0a0a; }
-.cc svg { filter: drop-shadow(0 2px 4px rgba(0, 0, 0, 0.45)); }
+
 .crew-frame, .crew-frame i { --c: rgba(255, 255, 255, 0.9); }
 .crew-frame i { background: #0a0a0a; }
 
@@ -590,7 +590,7 @@ textarea.fi { resize: vertical; min-height: 130px; }
    Piso del fondo al 76,1 % de su alto y piso de la foto al 73,5 % → la foto mide el 90 %
    del alto de la portada y apoya abajo: los dos pisos quedan en la misma línea. */
 .hero[data-photo] { --hc: calc(max(100svh, 640px) - 28px); --ph: 0.9; }
-.hero[data-photo] .hero-card { background: #040303 url("/hero-stage.png") right center / auto 100% no-repeat; }
+.hero[data-photo] .hero-card { background: #040303 url("/hero-stage.webp") right center / auto 100% no-repeat; }
 .hero[data-photo] .hvis-light, .hero[data-photo] .hstage-floor, .hero[data-photo] .hfloor { display: none; }
 .hero[data-photo] .hvis-media.has-photo::after { display: none; }
 .hero[data-photo] .hvis, .hero[data-photo] .hvis-par { height: auto; align-self: end; }
@@ -604,7 +604,7 @@ textarea.fi { resize: vertical; min-height: 130px; }
   .hero[data-photo] .hero-card {
     background:
       linear-gradient(to bottom, #040303 0, #040303 calc(100% - var(--hv)), rgba(4, 3, 3, 0) calc(100% - var(--hv) * 0.7)),
-      #040303 url("/hero-stage.png") right bottom / auto var(--hv) no-repeat;
+      #040303 url("/hero-stage.webp") right bottom / auto var(--hv) no-repeat;
   }
   .hero[data-photo] .hvis { height: var(--hv); min-height: 0; max-height: none; }
   .hero[data-photo] .hvis-par { height: 100%; }
@@ -626,14 +626,14 @@ textarea.fi { resize: vertical; min-height: 130px; }
 /* "cover" llena todo el ancho y alto; la posición vertical 76,1 % hace que la línea del
    piso del fondo (al 76,1 % de la imagen) caiga siempre al 76,1 % del alto de la portada,
    así coincide con el piso de la foto en cualquier tamaño o proporción de pantalla. */
-.hero[data-photo] .hero-card { background: #040303 url("/hero-stage.png") right 76.1% / cover no-repeat; }
+.hero[data-photo] .hero-card { background: #040303 url("/hero-stage.webp") right 76.1% / cover no-repeat; }
 @media (max-width: 900px) {
   /* En celular/tableta el estudio va detrás del bloque de la foto, de borde a borde. */
   .hero[data-photo] .hero-card { background: #040303; }
   .hero[data-photo] .hvis { position: relative; }
   .hero[data-photo] .hvis::before {
     content: ""; position: absolute; z-index: 0; top: 0; bottom: 0; left: -20px; right: -20px;
-    background: #040303 url("/hero-stage.png") right 76.1% / cover no-repeat;
+    background: #040303 url("/hero-stage.webp") right 76.1% / cover no-repeat;
     -webkit-mask-image: linear-gradient(to bottom, transparent 0%, #000 32%); mask-image: linear-gradient(to bottom, transparent 0%, #000 32%);
   }
   .hero[data-photo] .hvis-par { position: relative; z-index: 1; }
@@ -675,3 +675,12 @@ textarea.fi { resize: vertical; min-height: 130px; }
 .player.r916 { max-width: min(480px, calc(82vh * 9 / 16)); }
 @media (max-width: 900px) { .pf-grid { grid-template-columns: repeat(2, minmax(0, 1fr)); } }
 @media (max-width: 560px) { .pf-grid { grid-template-columns: 1fr; } .vcard, .vcard.tall { border-radius: 20px; } }
+
+/* ============ RENDIMIENTO ============ */
+/* El menú fijo desenfoca menos (el desenfoque se recalcula en cada cuadro del scroll). */
+.nav.scrolled .nav-in { -webkit-backdrop-filter: blur(10px); backdrop-filter: blur(10px); }
+/* Modo liviano para equipos lentos: mismas animaciones; sin desenfoques en vivo ni grano. */
+.lowfx .grain { display: none; }
+.lowfx .nav.scrolled .nav-in, .lowfx .hbadge, .lowfx .vcard-play, .lowfx .vcard-badge, .lowfx .about-tag { -webkit-backdrop-filter: none; backdrop-filter: none; }
+.lowfx .nav.scrolled .nav-in { background: rgba(14, 7, 4, 0.94); }
+.lowfx .hbadge, .lowfx .about-tag { background: rgba(16, 8, 4, 0.9); }

@@ -41,7 +41,7 @@ const nextConfig: NextConfig = {
   // pantalla una copia del tamaño justo con calidad alta (90).
   images: {
     remotePatterns: supabaseHost ? [{ protocol: "https", hostname: supabaseHost, pathname: "/storage/v1/object/public/portafolio/**" }] : [],
-    qualities: [75, 90],
+    qualities: [75, 90, 95],
     formats: ["image/avif", "image/webp"],
   },
   async headers() {

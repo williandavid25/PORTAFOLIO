@@ -1,6 +1,7 @@
 "use client";
 
 import Link from "next/link";
+import Image from "next/image";
 import { useEffect, useRef } from "react";
 import gsap from "gsap";
 import { onReady, splitChars, splitWords } from "@/components/motion/MotionRoot";
@@ -202,9 +203,10 @@ export default function Hero({ site, mediaUrl }: Props) {
                       <video src={mediaUrl} autoPlay muted loop playsInline preload="auto" aria-label={site.name} className="hmain" />
                     ) : (
                       <>
-                        {/* Original sin optimizar ni comprimir: se ve tal cual se subió. */}
-                        {/* eslint-disable-next-line @next/next/no-img-element */}
-                        <img src={mediaUrl} alt={site.name} className="hmain" fetchPriority="high" decoding="async" />
+                        {/* Copia a calidad 95 del tamaño justo para cada pantalla (AVIF/WebP con transparencia).
+                            El original sigue intacto en la nube. */}
+                        <Image src={mediaUrl} alt={site.name} className="hmain" width={0} height={0} quality={95} preload
+                          sizes="(max-width: 900px) 70vw, 640px" style={{ height: "100%", width: "auto" }} />
                       </>
                     )
                   ) : (

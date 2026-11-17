@@ -65,8 +65,11 @@ class Director {
   remove(t: Task) { this.tasks.delete(t); }
   show() { this.visible = true; }
 
+  private idle = false;
   private tick = () => {
     if (!this.visible) return;
+    // Sin trabajos en curso ni punteros visibles: no hace nada en este cuadro (ahorra CPU).
+    if (this.idle && !Array.from(this.tasks).some((t) => { const p = t.tl.progress(); return p > 0.0005 && p < 0.9995; })) return;
     const lr = this.layer.getBoundingClientRect();
     const now = performance.now();
     const vw = innerWidth, vh = innerHeight;
@@ -109,8 +112,11 @@ class Director {
       a.el.style.transform = `translate3d(${a.x.toFixed(1)}px,${a.y.toFixed(1)}px,0) scale(${p.scale || 1})`;
       if (p.kind !== a.kind) { a.el.classList.remove(`k-${a.kind}`); a.el.classList.add(`k-${p.kind}`); a.kind = p.kind; }
     });
+    this.settle();
   };
 
+  /** Se recalcula al final de cada cuadro: si todos los punteros están ocultos, queda en reposo. */
+  private settle() { this.idle = this.agents.every((a) => a.op < 0.02); }
   destroy() {
     gsap.ticker.remove(this.tick);
     this.overlay.remove();

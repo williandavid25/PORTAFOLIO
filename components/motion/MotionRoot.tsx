@@ -41,6 +41,23 @@ export default function MotionRoot({ children }: { children: ReactNode }) {
   const layerRef = useRef<HTMLDivElement>(null);
   const pathname = usePathname();
 
+  // ---- Equipos lentos: activa el modo liviano (mismas animaciones, efectos caros desactivados) ----
+  useEffect(() => {
+    const root = document.documentElement;
+    const nav = navigator as Navigator & { deviceMemory?: number };
+    if ((nav.hardwareConcurrency ?? 8) <= 4 || (nav.deviceMemory ?? 8) <= 4) root.classList.add("lowfx");
+    // Medición real: si en 2 s los cuadros van lentos, también pasa a modo liviano.
+    let frames = 0, raf = 0;
+    const start = performance.now();
+    const loop = () => {
+      frames++;
+      if (performance.now() - start < 2000) raf = requestAnimationFrame(loop);
+      else if (frames / 2 < 45) root.classList.add("lowfx");
+    };
+    const t = setTimeout(() => { raf = requestAnimationFrame(loop); }, 2500);
+    return () => { clearTimeout(t); cancelAnimationFrame(raf); };
+  }, []);
+
   // ---- Desplazamiento suave + barra de progreso (una sola vez) ----
   useEffect(() => {
     const lenis = reduced() ? null : new Lenis({ duration: 1.1, smoothWheel: true, easing: (t) => Math.min(1, 1.001 - Math.pow(2, -10 * t)) });
