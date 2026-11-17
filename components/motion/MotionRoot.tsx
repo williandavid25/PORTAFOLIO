@@ -89,8 +89,8 @@ export default function MotionRoot({ children }: { children: ReactNode }) {
     const fine = isFine();
     const layer = layerRef.current;
     const cleanups: Array<() => void> = [];
-    // El hero usa los 3 primeros miembros del equipo; las secciones siguen desde el 4.º.
-    const crew = layer ? new Crew(layer, 3) : null;
+    // El hero usa los 10 primeros punteros; las secciones siguen desde el 11.º.
+    const crew = layer ? new Crew(layer, 10) : null;
 
     const ctx = gsap.context(() => {
       const crewOwned = (el: Element) => el.closest("[data-crew]") !== null && (el as HTMLElement).dataset.crew !== undefined;

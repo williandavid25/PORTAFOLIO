@@ -3,7 +3,7 @@
 import Link from "next/link";
 import { useEffect, useRef } from "react";
 import gsap from "gsap";
-import { onReady, splitWords } from "@/components/motion/MotionRoot";
+import { onReady, splitChars, splitWords } from "@/components/motion/MotionRoot";
 import { Crew, showCrew } from "@/components/motion/Crew";
 import Icon, { PlayIcon } from "./Icon";
 import Socials from "./Socials";
@@ -39,54 +39,153 @@ export default function Hero({ site, mediaUrl, reelHref }: Props) {
       const tl = gsap.timeline({ paused: true, defaults: { ease: "expo.out" }, onComplete: loops });
       tl.from(q(".hero-card"), { scale: 0.94, opacity: 0, duration: 1.5 }, 0)
         .from(q(".hglow"), { scale: 0.2, opacity: 0, duration: 2.3 }, 0.1)
-        .from(document.querySelectorAll("[data-nav] > *"),{ y: -36, opacity: 0, stagger: 0.08, duration: 1.1 }, 0.3)
+        .from(document.querySelectorAll("[data-nav] > *"), { y: -24, opacity: 0, stagger: 0.08, duration: 1 }, 0.45)
         .fromTo(q(".hvis-media"), { clipPath: "inset(100% 0% 0% 0%)" }, { clipPath: "inset(0% 0% 0% 0%)", duration: 1.8, ease: "expo.inOut", clearProps: "clipPath" }, 0.25)
         .from(q(".hvis-media > *"), { scale: 1.22, yPercent: 6, duration: 2.3, transformOrigin: "50% 100%" }, 0.25)
-        .from(q(".chip"), { y: 22, opacity: 0, duration: 1 }, 0.7)
         .from(chars, { yPercent: 115, rotate: 6, opacity: 0, duration: 1.25, stagger: 0.032 }, 0.75)
-        .from(q(".htag"), { opacity: 0, letterSpacing: "0.9em", duration: 1.7, ease: "power4.out" }, 1)
-        .from(q(".hdesc"), { y: 24, opacity: 0, duration: 1.1 }, 1.1)
-        .from(q(".hctas > *"), { y: 24, opacity: 0, stagger: 0.1, duration: 1.1 }, 1.2)
+        .from(q(".hctas .btn-p"), { y: 24, opacity: 0, duration: 1 }, 1.2)
         .from(q(".socials > *"), { y: 14, opacity: 0, stagger: 0.06, duration: 0.9 }, 1.35)
-        .from(q(".hbadge"), { scale: 0, opacity: 0, rotate: -10, ease: "back.out(2)", duration: 1 }, 1.4)
-        .from(q(".hplay"), { scale: 0, opacity: 0, rotate: -90, ease: "back.out(1.8)", duration: 1.1 }, 1.5)
-        .from(q(".hscroll"), { opacity: 0, x: 20, duration: 1 }, 1.6);
+        .from(q(".hscroll"), { opacity: 0, x: 20, duration: 1 }, 2.4);
       // ---- El equipo arranca en la portada: uno escribe, otro estira la foto, otro hace clic ----
       const layer = document.querySelector<HTMLElement>(".crew");
       if (layer) {
         const crew = new Crew(layer, 0);
         cleanups.push(() => crew.destroy());
-        const hhEl = q(".hh")[0] as HTMLElement, mediaEl = q(".hvis-media")[0] as HTMLElement;
-        const btn = q(".hctas .btn-p")[0] as HTMLElement | undefined;
-        const H = () => crew.box(hhEl), M = () => crew.box(mediaEl);
+        const one = (sel: string) => (q(sel)[0] as HTMLElement | undefined) ?? null;
+        /** Cada trabajo es su propio timeline dentro de la entrada: el puntero solo se ve mientras trabaja. */
+        const job = (pos: number, build: (t: gsap.core.Timeline) => void) => {
+          const t = gsap.timeline({ defaults: { ease: "power2.out" } });
+          build(t);
+          crew.bind(t);
+          tl.add(t, pos);
+        };
 
-        const writer = crew.cursor(crew.next(), "escribiendo", true);
-        tl.fromTo(writer, { x: () => H().x - 70, y: () => H().y + H().h + 30, opacity: 0 }, { x: () => H().x - 6, y: () => H().y + H().h * 0.25, opacity: 1, duration: 0.35, ease: "power2.out" }, 0.45)
-          .to(writer, { x: () => H().x + H().w, y: () => H().y + H().h * 0.62, duration: 1.45, ease: "none" }, 0.8)
-          .to(writer, { x: "+=50", y: "+=50", opacity: 0, duration: 0.4, ease: "power2.in" }, 2.3);
+        // Menú: lo selecciona y aparece.
+        const navIn = document.querySelector<HTMLElement>("[data-nav]");
+        if (navIn) job(0.15, (t) => {
+          const m = crew.next(); const c = crew.cursor(m, "seleccionando"); const s = crew.sel(m);
+          const N = () => crew.box(navIn);
+          t.fromTo(c, { x: () => N().x - 40, y: () => N().y + N().h + 40 }, { x: () => N().x + 4, y: () => N().y + 4, duration: 0.25 })
+            .fromTo(s, { x: () => N().x, y: () => N().y, width: 0, height: 0, opacity: 1 }, { width: () => N().w, height: () => N().h, duration: 0.7, ease: "power2.inOut" })
+            .to(c, { x: () => N().x + N().w - 30, y: () => N().y + N().h, duration: 0.7, ease: "power2.inOut" }, "<")
+            .to(s, { opacity: 0, duration: 0.35 })
+            .to(c, { y: "+=30", duration: 0.2 }, "<");
+        });
 
-        const m2 = crew.next();
-        const stretcher = crew.cursor(m2, "estirando");
-        const frame = crew.frame(m2);
-        tl.fromTo(frame, { x: () => M().x, y: () => M().y + M().h, width: () => M().w, height: 0, opacity: 0 }, { opacity: 1, duration: 0.15 }, 0.25)
-          .fromTo(stretcher, { x: () => M().x + M().w + 60, y: () => M().y + M().h + 40, opacity: 0 }, { x: () => M().x + M().w, y: () => M().y + M().h, opacity: 1, duration: 0.3, ease: "power2.out" }, 0.1)
-          .to(frame, { y: () => M().y, height: () => M().h, duration: 1.8, ease: "expo.inOut" }, 0.25)
-          .to(stretcher, { y: () => M().y, duration: 1.8, ease: "expo.inOut" }, 0.25)
-          .to(frame, { opacity: 0, duration: 0.4 }, 2.2)
-          .to(stretcher, { x: "+=60", y: "-=30", opacity: 0, duration: 0.4, ease: "power2.in" }, 2.15);
+        // Foto: estira el marco hacia arriba mientras se revela.
+        const mediaEl = one(".hvis-media");
+        if (mediaEl) job(0.1, (t) => {
+          const m = crew.next(); const c = crew.cursor(m, "estirando"); const fr = crew.frame(m);
+          const M = () => crew.box(mediaEl);
+          t.fromTo(c, { x: () => M().x + M().w + 50, y: () => M().y + M().h + 30 }, { x: () => M().x + M().w, y: () => M().y + M().h, duration: 0.2 }, 0)
+            .fromTo(fr, { x: () => M().x, y: () => M().y + M().h, width: () => M().w, height: 0, opacity: 0 }, { opacity: 1, duration: 0.12 }, 0.15)
+            .to(fr, { y: () => M().y, height: () => M().h, duration: 1.8, ease: "expo.inOut" }, 0.15)
+            .to(c, { y: () => M().y, duration: 1.8, ease: "expo.inOut" }, 0.15)
+            .to(fr, { opacity: 0, duration: 0.35 }, 2)
+            .to(c, { x: "+=30", y: "-=20", duration: 0.2 }, 2);
+        });
 
-        if (btn) {
-          const m3 = crew.next();
-          const clicker = crew.cursor(m3, "revisando");
-          const ripple = crew.ripple(m3);
-          const Bt = () => crew.box(btn);
-          tl.fromTo(clicker, { x: () => Bt().x + Bt().w + 80, y: () => Bt().y + Bt().h + 70, opacity: 0 }, { x: () => Bt().x + Bt().w * 0.6, y: () => Bt().y + Bt().h * 0.55, opacity: 1, duration: 0.6, ease: "power2.out" }, 1.5)
-            .to(clicker, { scale: 0.82, duration: 0.08 }, 2.15)
-            .fromTo(ripple, { x: () => Bt().x + Bt().w * 0.6, y: () => Bt().y + Bt().h * 0.55, scale: 0.2, opacity: 0.9 }, { scale: 1.8, opacity: 0, duration: 0.6, ease: "power2.out" }, 2.18)
-            .to(clicker, { scale: 1, duration: 0.1 }, 2.25)
-            .to(clicker, { x: "+=70", y: "+=40", opacity: 0, duration: 0.45, ease: "power2.in" }, 2.6);
-        }
-        crew.bind(tl);
+        // Etiqueta "Disponible": la arrastra desde la derecha.
+        const chip = one(".chip");
+        if (chip) job(0.55, (t) => {
+          const c = crew.cursor(crew.next(), "moviendo");
+          const C = () => crew.box(chip);
+          t.fromTo(chip, { x: 170, opacity: 0.25 }, { opacity: 0.6, duration: 0.05 }, 0.15)
+            .fromTo(c, { x: () => C().x + C().w - 26 + 170, y: () => C().y + C().h + 40 }, { x: () => C().x + C().w - 26 + 170, y: () => C().y + C().h / 2, duration: 0.2 }, 0)
+            .to(c, { scale: 0.86, duration: 0.05 }, 0.2)
+            .to(chip, { x: 0, opacity: 1, duration: 0.75 }, 0.25)
+            .to(c, { x: () => C().x + C().w - 26, duration: 0.75 }, 0.25)
+            .to(c, { scale: 1, duration: 0.05 }, 1)
+            .to(c, { y: "+=30", duration: 0.2 }, 1.05);
+        });
+
+        // Título: lo escribe.
+        const hhEl = one(".hh");
+        if (hhEl) job(0.45, (t) => {
+          const c = crew.cursor(crew.next(), "escribiendo", true);
+          const H = () => crew.box(hhEl);
+          t.fromTo(c, { x: () => H().x - 60, y: () => H().y + H().h + 30 }, { x: () => H().x - 6, y: () => H().y + H().h * 0.3, duration: 0.3 })
+            .to(c, { x: () => H().x + H().w, y: () => H().y + H().h * 0.62, duration: 1.45, ease: "none" }, 0.35)
+            .to(c, { x: "+=30", y: "+=30", duration: 0.25 });
+        });
+
+        // Subtítulo: lo escribe letra por letra.
+        const tag = one(".htag");
+        if (tag) job(1.05, (t) => {
+          const c = crew.cursor(crew.next(), "escribiendo", true);
+          const letters = splitChars(tag);
+          const T = () => crew.box(tag);
+          t.fromTo(c, { x: () => T().x - 40, y: () => T().y + T().h + 30 }, { x: () => T().x - 4, y: () => T().y + T().h / 2, duration: 0.15 })
+            .fromTo(letters, { opacity: 0 }, { opacity: 1, duration: 0.04, stagger: 1 / Math.max(1, letters.length) }, 0.15)
+            .to(c, { x: () => T().x + T().w, duration: 1, ease: "none" }, 0.15)
+            .to(c, { x: "+=30", y: "+=30", duration: 0.2 });
+        });
+
+        // Descripción: la selecciona y aparece.
+        const desc = one(".hdesc");
+        if (desc) job(1.3, (t) => {
+          const m = crew.next(); const c = crew.cursor(m, "seleccionando"); const s = crew.sel(m);
+          const D = () => crew.box(desc);
+          t.fromTo(desc, { opacity: 0, y: 12 }, { opacity: 0, duration: 0.01 }, 0)
+            .fromTo(c, { x: () => D().x - 40, y: () => D().y - 30 }, { x: () => D().x, y: () => D().y, duration: 0.2 }, 0)
+            .fromTo(s, { x: () => D().x, y: () => D().y, width: 0, height: 0, opacity: 1 }, { width: () => D().w, height: () => D().h, duration: 0.55, ease: "power2.inOut" }, 0.2)
+            .to(c, { x: () => D().x + D().w, y: () => D().y + D().h, duration: 0.55, ease: "power2.inOut" }, 0.2)
+            .to(desc, { opacity: 1, y: 0, duration: 0.5 }, 0.7)
+            .to(s, { opacity: 0, duration: 0.3 }, 0.8)
+            .to(c, { x: "+=24", y: "+=24", duration: 0.2 }, 0.8);
+        });
+
+        // Insignia "3+ años": la estira desde su esquina.
+        const badge = one(".hbadge");
+        if (badge) job(1.5, (t) => {
+          const c = crew.cursor(crew.next(), "estirando");
+          const Bd = () => crew.box(badge);
+          t.fromTo(badge, { scale: 0, opacity: 1, transformOrigin: "0% 0%" }, { scale: 0, duration: 0.01 }, 0)
+            .fromTo(c, { x: () => Bd().x - 30, y: () => Bd().y - 30 }, { x: () => Bd().x, y: () => Bd().y, duration: 0.2 }, 0)
+            .to(badge, { scale: 1, duration: 0.7, ease: "power2.inOut" }, 0.2)
+            .to(c, { x: () => Bd().x + badge.offsetWidth, y: () => Bd().y + badge.offsetHeight, duration: 0.7, ease: "power2.inOut" }, 0.2)
+            .to(c, { x: "+=24", y: "+=24", duration: 0.2 });
+        });
+
+        // Círculo "ver showreel": lo arrastra girando hasta su lugar.
+        const play = one(".hplay");
+        if (play) job(1.85, (t) => {
+          const c = crew.cursor(crew.next(), "moviendo");
+          const P = () => crew.box(play);
+          t.fromTo(play, { x: -170, rotate: -140, opacity: 0.25 }, { opacity: 0.6, duration: 0.05 }, 0.15)
+            .fromTo(c, { x: () => P().x + P().w / 2 - 170, y: () => P().y + P().h + 40 }, { x: () => P().x + P().w / 2 - 170, y: () => P().y + P().h / 2, duration: 0.2 }, 0)
+            .to(c, { scale: 0.86, duration: 0.05 }, 0.2)
+            .to(play, { x: 0, rotate: 0, opacity: 1, duration: 0.8 }, 0.25)
+            .to(c, { x: () => P().x + P().w / 2, duration: 0.8 }, 0.25)
+            .to(c, { scale: 1, duration: 0.05 }, 1.05)
+            .to(c, { y: "+=30", duration: 0.2 }, 1.1);
+        });
+
+        // Botón "Contáctame": lo sube arrastrando.
+        const btnO = one(".hctas .btn-o");
+        if (btnO) job(1.7, (t) => {
+          const c = crew.cursor(crew.next(), "moviendo");
+          const Bo = () => crew.box(btnO);
+          t.fromTo(btnO, { y: 110, opacity: 0.25 }, { opacity: 0.6, duration: 0.05 }, 0.15)
+            .fromTo(c, { x: () => Bo().x + Bo().w / 2, y: () => Bo().y + 110 + Bo().h + 30 }, { x: () => Bo().x + Bo().w / 2, y: () => Bo().y + 110 + Bo().h / 2, duration: 0.2 }, 0)
+            .to(c, { scale: 0.86, duration: 0.05 }, 0.2)
+            .to(btnO, { y: 0, opacity: 1, duration: 0.7 }, 0.25)
+            .to(c, { y: () => Bo().y + Bo().h / 2, duration: 0.7 }, 0.25)
+            .to(c, { scale: 1, duration: 0.05 }, 0.95)
+            .to(c, { x: "+=30", y: "+=30", duration: 0.2 }, 1);
+        });
+
+        // Botón "Ver portafolio": lo revisa con un clic.
+        const btnP = one(".hctas .btn-p");
+        if (btnP) job(2.05, (t) => {
+          const m = crew.next(); const c = crew.cursor(m, "revisando"); const r = crew.ripple(m);
+          const Bt = () => crew.box(btnP);
+          t.fromTo(c, { x: () => Bt().x + Bt().w + 60, y: () => Bt().y + Bt().h + 50 }, { x: () => Bt().x + Bt().w * 0.6, y: () => Bt().y + Bt().h * 0.55, duration: 0.5 })
+            .to(c, { scale: 0.82, duration: 0.08 })
+            .fromTo(r, { x: () => Bt().x + Bt().w * 0.6, y: () => Bt().y + Bt().h * 0.55, scale: 0.2, opacity: 0.9 }, { scale: 1.8, opacity: 0, duration: 0.6 })
+            .to(c, { scale: 1, duration: 0.1 }, "<")
+            .to(c, { x: "+=40", y: "+=30", duration: 0.25 });
+        });
       }
 
       cleanups.push(onReady(() => { tl.play(); showCrew(); }));

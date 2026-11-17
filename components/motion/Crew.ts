@@ -82,7 +82,7 @@ class Director {
       const p = t.tl.progress();
       let rank = 0;
       if (p > 0.0005 && p < 0.9995) { rank = 3; t.doneAt = 0; }
-      else if (p <= 0.0005 && near(t)) rank = 2;
+      else if (p <= 0.0005 && t.el && near(t)) rank = 2;
       else if (p >= 0.9995) { if (!t.doneAt) t.doneAt = now; if (now - t.doneAt < 900 && near(t)) rank = 1; }
       if (!rank) return;
       const cur = best.get(t.agent);
