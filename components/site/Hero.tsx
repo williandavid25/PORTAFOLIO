@@ -206,7 +206,7 @@ export default function Hero({ site, mediaUrl }: Props) {
                         {/* Copia a calidad 95 del tamaño justo para cada pantalla (AVIF/WebP con transparencia).
                             El original sigue intacto en la nube. */}
                         <Image src={mediaUrl} alt={site.name} className="hmain" width={0} height={0} quality={95} preload
-                          sizes="(max-width: 900px) 70vw, 640px" style={{ height: "100%", width: "auto" }} />
+                          sizes="(max-width: 900px) 440px, 640px" style={{ height: "100%", width: "auto" }} />
                       </>
                     )
                   ) : (
