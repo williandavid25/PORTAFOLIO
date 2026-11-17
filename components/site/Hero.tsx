@@ -202,13 +202,11 @@ export default function Hero({ site, mediaUrl, reelHref }: Props) {
     const card = q(".hero-card")[0] as HTMLElement;
     const par = q(".hvis-par")[0] as HTMLElement;
     const media = q(".hvis-media")[0] as HTMLElement;
-    const glow = q(".hglow")[0] as HTMLElement;
     const hh = q(".hh")[0] as HTMLElement;
-    const gx = gsap.quickTo(glow, "x", { duration: 1.6, ease: "power3" }), gy = gsap.quickTo(glow, "y", { duration: 1.6, ease: "power3" });
     const px = gsap.quickTo(par, "x", { duration: 1.2, ease: "power3" }), py = gsap.quickTo(par, "y", { duration: 1.2, ease: "power3" });
     const ry = gsap.quickTo(media, "rotateY", { duration: 1.2, ease: "power3" }), rx = gsap.quickTo(media, "rotateX", { duration: 1.2, ease: "power3" });
     const tx = gsap.quickTo(hh, "x", { duration: 1.4, ease: "power3" });
-    const apply = (nx: number, ny: number) => { gx(nx * 90); gy(ny * 70); px(nx * -22); py(ny * -12); ry(nx * 14); rx(ny * -8); tx(nx * 12); };
+    const apply = (nx: number, ny: number) => { px(nx * -22); py(ny * -12); ry(nx * 14); rx(ny * -8); tx(nx * 12); };
     if (fine) {
       const move = (e: PointerEvent) => { const r = card.getBoundingClientRect(); apply((e.clientX - r.left) / r.width - 0.5, (e.clientY - r.top) / r.height - 0.5); };
       const leave = () => apply(0, 0);

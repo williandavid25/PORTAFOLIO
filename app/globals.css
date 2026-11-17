@@ -185,8 +185,6 @@ input, textarea, select { font: inherit; color: inherit; }
 .stats { padding: 70px 0; }
 .stats-grid { display: grid; grid-template-columns: repeat(4, 1fr); gap: 1px; background: var(--line); border-radius: var(--rl); overflow: hidden; border: 1px solid var(--line); }
 .stat { background: var(--bg); padding: 44px 24px; text-align: center; position: relative; overflow: hidden; }
-.stat::after { content: ""; position: absolute; left: 50%; bottom: -60%; width: 120%; height: 100%; transform: translateX(-50%); background: radial-gradient(ellipse, rgba(255, 106, 19, 0.28), transparent 60%); opacity: 0; transition: opacity 0.5s; }
-.stat:hover::after { opacity: 1; }
 .stat b { display: block; font-family: var(--fm); font-weight: 400; font-size: clamp(3rem, 6vw, 4.2rem); line-height: 1; margin-bottom: 8px; background: linear-gradient(180deg, #fff 20%, var(--acc)); -webkit-background-clip: text; background-clip: text; color: transparent; position: relative; z-index: 1; }
 .stat span { font-size: 13px; color: var(--g2); position: relative; z-index: 1; }
 
@@ -214,10 +212,8 @@ input, textarea, select { font: inherit; color: inherit; }
 .serv-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 22px; perspective: 1200px; }
 .card { background: var(--bg3); border: 1px solid rgba(255, 255, 255, 0.06); border-radius: var(--rl); padding: 36px 30px; position: relative; overflow: hidden; transition: border-color 0.4s, box-shadow 0.4s; transform-style: preserve-3d; --mx: 50%; --my: 50%; }
 .card::before { content: ""; position: absolute; top: 0; left: 0; right: 0; height: 2px; background: var(--grad); transform: scaleX(0); transform-origin: left; transition: transform 0.6s var(--ease-out); }
-.card::after { content: ""; position: absolute; inset: 0; background: radial-gradient(380px circle at var(--mx) var(--my), rgba(255, 106, 19, 0.14), transparent 45%); opacity: 0; transition: opacity 0.4s; pointer-events: none; }
 .card:hover { border-color: rgba(255, 106, 19, 0.28); box-shadow: 0 30px 60px -20px rgba(0, 0, 0, 0.6); }
 .card:hover::before { transform: none; }
-.card:hover::after { opacity: 1; }
 .card-ic { width: 54px; height: 54px; border-radius: 14px; background: var(--acc-a10); border: 1px solid var(--acc-a18); display: grid; place-items: center; margin-bottom: 26px; transition: background 0.4s, transform 0.5s var(--ease-out); }
 .card:hover .card-ic { background: var(--grad); transform: rotate(-8deg) scale(1.05); }
 .card-ic svg { width: 24px; height: 24px; stroke: var(--acc2); fill: none; stroke-width: 1.5; stroke-linecap: round; stroke-linejoin: round; transition: stroke 0.4s; }
