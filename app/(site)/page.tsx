@@ -1,0 +1,220 @@
+import Link from "next/link";
+import Loader from "@/components/site/Loader";
+import Hero from "@/components/site/Hero";
+import Showreel from "@/components/site/Showreel";
+import PortfolioGrid from "@/components/site/PortfolioGrid";
+import ContactForm from "@/components/site/ContactForm";
+import Socials from "@/components/site/Socials";
+import Icon from "@/components/site/Icon";
+import { getProjects, getSite, getTestimonials } from "@/lib/data";
+import { mediaUrl } from "@/lib/supabase/config";
+import { toCard } from "@/lib/cards";
+
+export const revalidate = 60;
+
+const SERVICES = [
+  { icon: "film", title: "Edición para Redes Sociales", text: "Reels, TikToks y Shorts diseñados para detener el scroll y maximizar el engagement de tu audiencia." },
+  { icon: "video", title: "Producción Publicitaria", text: "Videos comerciales de alto impacto para campañas digitales que convierten espectadores en clientes." },
+  { icon: "monitor", title: "Video Corporativo", text: "Presentaciones institucionales, videos de marca y testimonios que fortalecen la identidad de tu empresa." },
+  { icon: "playc", title: "YouTube & Streaming", text: "Edición profesional para creadores: intros, outros, thumbnails animados y motion graphics personalizados." },
+  { icon: "pen", title: "Color Grading", text: "Corrección y gradación de color profesional con estética cinematográfica." },
+  { icon: "pulse", title: "Motion Graphics", text: "Animaciones tipográficas, intros dinámicas y gráficos en movimiento que elevan tu contenido." },
+];
+
+const STEPS = [
+  { icon: "doc", title: "Briefing", text: "Entendemos tus objetivos, audiencia y el mensaje a comunicar." },
+  { icon: "refresh", title: "Recepción", text: "Recepción y organización de todos los archivos RAW del proyecto." },
+  { icon: "film", title: "Edición", text: "Montaje profesional, sincronización y construcción de la narrativa." },
+  { icon: "clock", title: "Color & Audio", text: "Gradación de color cinematográfica y mezcla de audio profesional." },
+  { icon: "eye", title: "Revisión", text: "Primer corte y ajustes contigo hasta la perfección." },
+  { icon: "send", title: "Entrega", text: "Exportación optimizada para cada plataforma y formato." },
+];
+
+const MARQUEE = ["Reels", "Publicidad", "Color Grading", "Motion Graphics", "YouTube", "Corporativo"];
+
+export default async function HomePage() {
+  const [site, projects, testimonials] = await Promise.all([getSite(), getProjects(), getTestimonials()]);
+  const featured = projects.find((p) => p.featured) ?? projects[0] ?? null;
+  const featuredCard = featured ? toCard(featured) : null;
+  const latest = projects.slice(0, 6).map(toCard);
+  const aboutImg = mediaUrl(site.aboutImagePath);
+  const wa = site.whatsapp ? `https://wa.me/${site.whatsapp}` : null;
+  const titleWords = site.aboutTitle.split(" ");
+  const cut = Math.ceil(titleWords.length / 2);
+
+  return (
+    <>
+      <Loader name={site.name} />
+      <Hero site={site} mediaUrl={mediaUrl(site.heroMediaPath)} reelHref={featured ? `/portafolio/${featured.slug}` : "/#showreel"} />
+
+      <div className="marq" aria-hidden="true">
+        <div className="marq-track" data-marquee>
+          {[0, 1].map((k) => (
+            <div className="marq-row" key={k}>
+              {MARQUEE.map((m, i) => (
+                <span key={m} style={{ display: "contents" }}>
+                  <span className={i % 2 ? "o" : ""}>{m}</span>
+                  <span className="star">✦</span>
+                </span>
+              ))}
+            </div>
+          ))}
+        </div>
+      </div>
+
+      <section className="stats">
+        <div className="container">
+          <div className="stats-grid">
+            <div className="stat" data-reveal><b data-count={site.stats.projects}>{site.stats.projects}</b><span>Proyectos completados</span></div>
+            <div className="stat" data-reveal><b data-count={site.stats.clients}>{site.stats.clients}</b><span>Clientes satisfechos</span></div>
+            <div className="stat" data-reveal><b data-count={site.stats.years}>{site.stats.years}</b><span>Años de experiencia</span></div>
+            <div className="stat" data-reveal><b data-count={site.stats.satisfaction} data-suffix="%">{site.stats.satisfaction}%</b><span>Satisfacción</span></div>
+          </div>
+        </div>
+      </section>
+
+      <section className="section" id="sobre-mi">
+        <div className="container about-grid">
+          <div className="about-pic" data-reveal>
+            <div className="about-frame">
+              {aboutImg ? (
+                // eslint-disable-next-line @next/next/no-img-element
+                <img src={aboutImg} alt={site.name} loading="lazy" data-parallax />
+              ) : (
+                <div className="about-ph"><Icon name="user" size={40} stroke={1.2} /></div>
+              )}
+            </div>
+            <div className="about-tag"><span className="ic"><Icon name="video" /></span><div><b>Edición premium</b>Entrega en 24–72 h</div></div>
+          </div>
+          <div>
+            <div className="eyebrow" data-reveal>Sobre mí</div>
+            <h2 className="title" data-split>{titleWords.slice(0, cut).join(" ")} <em>{titleWords.slice(cut).join(" ")}</em></h2>
+            <p className="lead" data-reveal>{site.bio}</p>
+            <div className="skills" data-reveal>
+              {site.skills.map((s) => (
+                <div className="skill" key={s.name}>
+                  <div className="skill-h"><span>{s.name}</span><span>{s.level}%</span></div>
+                  <div className="skill-b"><div className="skill-f" style={{ ["--w" as string]: `${s.level}%` }} data-skill /></div>
+                </div>
+              ))}
+            </div>
+            <div className="row-btns" data-reveal>
+              <Link href="/#contacto" className="btn btn-p" data-magnetic>Trabajemos juntos</Link>
+              {site.cvUrl && <a href={site.cvUrl} className="btn btn-o" target="_blank" rel="noopener noreferrer" data-magnetic>Descargar CV</a>}
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <section className="section services" id="servicios">
+        <div className="container">
+          <div className="sec-head center">
+            <div className="eyebrow center" data-reveal>Mis servicios</div>
+            <h2 className="title" data-split>Lo que puedo <em>hacer por ti</em></h2>
+          </div>
+          <div className="serv-grid">
+            {SERVICES.map((s, i) => (
+              <article className="card" key={s.title} data-tilt data-reveal>
+                <div className="card-ic"><Icon name={s.icon} size={24} stroke={1.5} /></div>
+                <h3>{s.title}</h3>
+                <p>{s.text}</p>
+                <span className="num">0{i + 1}</span>
+              </article>
+            ))}
+          </div>
+        </div>
+      </section>
+
+      <Showreel project={featuredCard?.project ?? null} videoUrl={featuredCard?.videoUrl ?? null} thumbUrl={featuredCard?.thumbUrl ?? null} />
+
+      <section className="section" id="portafolio">
+        <div className="container">
+          <div className="pf-head">
+            <div>
+              <div className="eyebrow" data-reveal>Portafolio</div>
+              <h2 className="title" style={{ marginBottom: 0 }} data-split>Trabajos <em>seleccionados</em></h2>
+            </div>
+            <Link href="/portafolio" className="btn btn-o" data-magnetic data-reveal>Ver todo <Icon name="arrow" className="arr" /></Link>
+          </div>
+          <PortfolioGrid items={latest} showFilters={false} />
+        </div>
+      </section>
+
+      <section className="section process">
+        <div className="container">
+          <div className="sec-head center">
+            <div className="eyebrow center" data-reveal>Mi proceso</div>
+            <h2 className="title" data-split>Cómo <em>trabajo</em></h2>
+          </div>
+          <div className="steps" data-steps>
+            <div className="steps-line"><div className="steps-fill" /></div>
+            {STEPS.map((s, i) => (
+              <div className="step" key={s.title} data-reveal>
+                <div className="step-ic"><Icon name={s.icon} size={26} stroke={1.5} /></div>
+                <small>0{i + 1}</small>
+                <h4>{s.title}</h4>
+                <p>{s.text}</p>
+              </div>
+            ))}
+          </div>
+        </div>
+      </section>
+
+      <section className="section" id="testimonios">
+        <div className="container">
+          <div className="sec-head center">
+            <div className="eyebrow center" data-reveal>Testimonios</div>
+            <h2 className="title" data-split>Lo que dicen mis <em>clientes</em></h2>
+          </div>
+          <div className="tgrid">
+            {testimonials.length ? (
+              testimonials.map((t) => {
+                const av = mediaUrl(t.avatar_path);
+                return (
+                  <figure className="tcard" key={t.id} data-reveal data-tilt>
+                    <div className="stars" aria-label={`${t.stars} de 5 estrellas`}>{"★".repeat(t.stars)}</div>
+                    <div className="q" aria-hidden="true">“</div>
+                    <blockquote><p>{t.body}</p></blockquote>
+                    <figcaption className="who">
+                      {/* eslint-disable-next-line @next/next/no-img-element */}
+                      <div className="avatar">{av ? <img src={av} alt="" loading="lazy" /> : t.name.charAt(0)}</div>
+                      <div><b>{t.name}</b><span>{t.role}</span></div>
+                    </figcaption>
+                  </figure>
+                );
+              })
+            ) : (
+              <div className="empty" data-reveal>Los testimonios de clientes aparecerán aquí pronto.</div>
+            )}
+          </div>
+        </div>
+      </section>
+
+      <section className="section contact" id="contacto">
+        <div className="container contact-grid">
+          <div>
+            <div className="eyebrow" data-reveal>Contacto</div>
+            <h2 className="title" data-split>Hablemos de tu <em>próximo proyecto</em></h2>
+            <p className="lead" data-reveal>¿Listo para crear algo increíble? Cuéntame sobre tu proyecto y en menos de 24 horas tendrás una propuesta.</p>
+            <div className="clist" data-reveal>
+              {site.email && (
+                <a className="citem" href={`mailto:${site.email}`}><span className="ic"><Icon name="mail" /></span><div><small>Email</small><span>{site.email}</span></div></a>
+              )}
+              {wa && (
+                <a className="citem" href={wa} target="_blank" rel="noopener noreferrer"><span className="ic"><Icon name="phone" /></span><div><small>WhatsApp</small><span>+{site.whatsapp}</span></div></a>
+              )}
+              {site.location && (
+                <div className="citem"><span className="ic"><Icon name="pin" /></span><div><small>Ubicación</small><span>{site.location}</span></div></div>
+              )}
+            </div>
+            <div data-reveal><Socials socials={site.socials} /></div>
+          </div>
+          <div className="form-card" data-reveal>
+            <h3>Envíame un mensaje</h3>
+            <ContactForm />
+          </div>
+        </div>
+      </section>
+    </>
+  );
+}
