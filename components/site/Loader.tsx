@@ -31,14 +31,14 @@ export default function Loader({ name }: { name: string }) {
     const num = el.querySelector<HTMLElement>(".loader-count span")!;
     const o = { v: 0 };
     const tl = gsap.timeline({ onComplete: () => { lowerCrew(); setShow(false); } });
-    tl.from(chars, { yPercent: 110, opacity: 0, stagger: 0.045, duration: 0.8, ease: "expo.out" }, 0.1)
-      .to(o, { v: 100, duration: 1.5, ease: "power2.inOut", onUpdate: () => { num.textContent = String(Math.round(o.v)); } }, 0)
+    tl.from(chars, { yPercent: 110, opacity: 0, stagger: 0.03, duration: 0.6, ease: "expo.out" }, 0.05)
+      .to(o, { v: 100, duration: 0.95, ease: "power2.inOut", onUpdate: () => { num.textContent = String(Math.round(o.v)); } }, 0)
       // Termina la carga: los punteros rompen la formación y van a construir la portada.
       .add(endCrewFlock)
       .add(markReady)
-      .to(chars, { yPercent: -110, opacity: 0, stagger: 0.025, duration: 0.4, ease: "expo.in" })
+      .to(chars, { yPercent: -110, opacity: 0, stagger: 0.02, duration: 0.3, ease: "expo.in" })
       .to(el.querySelectorAll(".loader-top,.loader-bot"), { opacity: 0, duration: 0.35 }, "<")
-      .to(el, { clipPath: "inset(0 0 100% 0)", duration: 0.85, ease: "expo.inOut" }, "-=.15");
+      .to(el, { clipPath: "inset(0 0 100% 0)", duration: 0.7, ease: "expo.inOut" }, "-=.12");
     return () => { tl.kill(); };
   }, []);
 

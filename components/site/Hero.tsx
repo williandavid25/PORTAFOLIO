@@ -160,6 +160,32 @@ export default function Hero({ site, mediaUrl }: Props) {
             .to(c, { x: "+=30", y: "+=30", duration: 0.2 }, 1);
         });
 
+        // ---- Más trabajos para que ningún puntero de la carga se quede sin hacer nada ----
+        const visible = (el: Element | null): el is HTMLElement => !!el && (el as HTMLElement).offsetWidth > 0 && (el as HTMLElement).offsetHeight > 0;
+        /** Un clic con onda sobre un elemento (ya visible): el puntero llega, presiona y sigue. */
+        const tap = (el: HTMLElement, pos: number) => job(pos, (t) => {
+          const m = crew.next(); const c = crew.cursor(m, "ajustando"); const r = crew.ripple(m);
+          const E = () => crew.box(el);
+          t.fromTo(c, { x: () => E().x + E().w / 2 + 40, y: () => E().y + E().h + 40 }, { x: () => E().x + E().w / 2, y: () => E().y + E().h / 2, duration: 0.35 })
+            .to(c, { scale: 0.82, duration: 0.06 })
+            .fromTo(r, { x: () => E().x + E().w / 2, y: () => E().y + E().h / 2, scale: 0.2, opacity: 0.8 }, { scale: 1.3, opacity: 0, duration: 0.45 })
+            .to(c, { scale: 1, duration: 0.08 }, "<")
+            .to(c, { y: "+=26", duration: 0.2 });
+        });
+        const logo = document.querySelector<HTMLElement>("[data-nav] .logo");
+        if (visible(logo)) tap(logo, 0.1);
+        document.querySelectorAll<HTMLElement>("[data-nav] .pill a").forEach((a, k) => { if (visible(a)) tap(a, 0.25 + k * 0.09); });
+        const cta = document.querySelector<HTMLElement>("[data-nav] .nav-cta");
+        if (visible(cta)) tap(cta, 0.55);
+        const burger = document.querySelector<HTMLElement>("[data-nav] .burger");
+        if (visible(burger)) tap(burger, 0.3);
+        const scrollHint = one(".hscroll");
+        if (visible(scrollHint)) tap(scrollHint, 1.6);
+        const name = one(".hh em");
+        if (visible(name)) tap(name, 1.25);
+        const dot = one(".chip .dot");
+        if (visible(dot)) tap(dot, 0.95);
+
         // Botón "Ver portafolio": lo revisa con un clic.
         const btnP = one(".hctas .btn-p");
         if (btnP) job(2.05, (t) => {

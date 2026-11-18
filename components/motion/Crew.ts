@@ -75,8 +75,8 @@ class Director {
     this.idle = false;
     this.flockT0 = performance.now();
     this.overlay.classList.add("on-top");
-    // Entran desde fuera de la pantalla, por la izquierda.
-    this.agents.forEach((a, i) => { a.x = -60 - i * 18; a.y = innerHeight * (0.35 + (i % 5) * 0.07); a.op = 0; a.rot = 0; });
+    // Todos aparecen ya en la formación (nadie llega tarde ni desaparece).
+    this.agents.forEach((a, i) => { const p = this.path(-i * 0.07); a.x = p.x; a.y = p.y; a.op = 0; a.rot = 0; });
   }
   /** Fin de la carga: dejan la formación y cada uno va a construir su parte de la portada. */
   private flockEndAt = 0;
@@ -92,7 +92,7 @@ class Director {
   private path(t: number) {
     const vw = innerWidth, vh = innerHeight;
     const A = Math.min(vw * 0.34, 560), B = Math.min(vh * 0.24, 230);
-    return { x: vw / 2 + A * Math.sin(0.85 * t), y: vh / 2 + B * Math.sin(1.7 * t + 0.6) };
+    return { x: vw / 2 + A * Math.sin(1.55 * t), y: vh / 2 + B * Math.sin(3.1 * t + 0.6) };
   }
   private flockTick(now: number) {
     this.agents.forEach((a, i) => this.fly(a, i, now));
@@ -101,7 +101,7 @@ class Director {
   private fly(a: Agent, i: number, now: number) {
     const t = (now - this.flockT0) / 1000;
     {
-      const d = i * 0.07;                                  // cada uno sigue al anterior (fila de aviones)
+      const d = i * 0.045;                                  // cada uno sigue al anterior (fila de aviones)
       const L = this.path(t - d), L2 = this.path(t - d + 0.016);
       const hx = L2.x - L.x, hy = L2.y - L.y, len = Math.hypot(hx, hy) || 1;
       const nx = -hy / len, ny = hx / len;                  // perpendicular al rumbo: abre la formación en V
@@ -115,7 +115,7 @@ class Director {
       const heading = (Math.atan2(hy, hx) * 180) / Math.PI + 135;
       let dr = heading - a.rot; dr = ((dr + 540) % 360) - 180;
       a.rot += dr * 0.2;
-      const fadeIn = Math.min(1, Math.max(0, (t - d * 0.6) / 0.6));
+      const fadeIn = Math.min(1, t / 0.25);
       a.op += (fadeIn - a.op) * 0.2;
       if (a.kind !== "arrow") { a.el.classList.remove(`k-${a.kind}`); a.kind = "arrow"; }
       a.el.style.opacity = a.op.toFixed(3);
