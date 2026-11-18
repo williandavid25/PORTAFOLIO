@@ -34,7 +34,7 @@ const rand = (a: number, b: number) => a + Math.random() * (b - a);
 // Director: los punteros y su bucle. Un puntero solo se ve cuando tiene
 // un trabajo por hacer cerca de la pantalla: llega, lo hace y se va.
 // =====================================================================
-type Agent = { el: HTMLElement; x: number; y: number; op: number; kind: Kind };
+type Agent = { el: HTMLElement; x: number; y: number; op: number; kind: Kind; rot: number };
 
 class Director {
   readonly count: number;
@@ -55,7 +55,7 @@ class Director {
       el.innerHTML = `${ICONS.arrow}${ICONS.ibeam}${ICONS.pen}`;
       el.style.opacity = "0";
       this.overlay.appendChild(el);
-      this.agents.push({ el, x: rand(0, innerWidth), y: rand(0, innerHeight), op: 0, kind: "arrow" });
+      this.agents.push({ el, x: rand(0, innerWidth), y: rand(0, innerHeight), op: 0, kind: "arrow", rot: 0 });
     }
     gsap.ticker.add(this.tick);
   }
@@ -65,11 +65,67 @@ class Director {
   remove(t: Task) { this.tasks.delete(t); }
   show() { this.visible = true; }
 
+  // ---------- Bandada de la pantalla de carga ("avioncitos") ----------
+  private flockOn = false;
+  private flockT0 = 0;
+  /** Los punteros vuelan en formación alrededor del nombre mientras carga la página. */
+  startFlock() {
+    this.flockOn = true;
+    this.visible = true;
+    this.idle = false;
+    this.flockT0 = performance.now();
+    this.overlay.classList.add("on-top");
+    // Entran desde fuera de la pantalla, por la izquierda.
+    this.agents.forEach((a, i) => { a.x = -60 - i * 18; a.y = innerHeight * (0.35 + (i % 5) * 0.07); a.op = 0; a.rot = 0; });
+  }
+  /** Fin de la carga: dejan la formación y cada uno va a construir su parte de la portada. */
+  private flockEndAt = 0;
+  endFlock() { this.flockOn = false; this.flockEndAt = performance.now(); }
+  /** Justo después de la carga: los que aún no tienen trabajo siguen volando en formación. */
+  private circling(now: number) { return this.flockEndAt > 0 && now - this.flockEndAt < 3400; }
+  /** Cuando la pantalla de carga desaparece, vuelven a su capa normal (debajo del menú). */
+  lowerLayer() { this.overlay.classList.remove("on-top"); }
+
+  /** Trayectoria en forma de 8 alrededor del centro de la pantalla. */
+  private path(t: number) {
+    const vw = innerWidth, vh = innerHeight;
+    const A = Math.min(vw * 0.34, 560), B = Math.min(vh * 0.24, 230);
+    return { x: vw / 2 + A * Math.sin(0.85 * t), y: vh / 2 + B * Math.sin(1.7 * t + 0.6) };
+  }
+  private flockTick(now: number) {
+    this.agents.forEach((a, i) => this.fly(a, i, now));
+  }
+  /** Un puntero en la formación: sigue el 8 con la punta hacia donde vuela. */
+  private fly(a: Agent, i: number, now: number) {
+    const t = (now - this.flockT0) / 1000;
+    {
+      const d = i * 0.07;                                  // cada uno sigue al anterior (fila de aviones)
+      const L = this.path(t - d), L2 = this.path(t - d + 0.016);
+      const hx = L2.x - L.x, hy = L2.y - L.y, len = Math.hypot(hx, hy) || 1;
+      const nx = -hy / len, ny = hx / len;                  // perpendicular al rumbo: abre la formación en V
+      const side = i % 2 ? 1 : -1, rank = Math.ceil(i / 2);
+      const spread = side * (rank * 7 + 6 * Math.sin(t * 2.2 + i));
+      const tx = L.x + nx * spread, ty = L.y + ny * spread;
+      a.x += (tx - a.x) * 0.16;
+      a.y += (ty - a.y) * 0.16;
+      // La punta del cursor (apunta arriba-izquierda, −135°) mira hacia donde vuela.
+      const heading = (Math.atan2(hy, hx) * 180) / Math.PI + 135;
+      let dr = heading - a.rot; dr = ((dr + 540) % 360) - 180;
+      a.rot += dr * 0.2;
+      const fadeIn = Math.min(1, Math.max(0, (t - d * 0.6) / 0.6));
+      a.op += (fadeIn - a.op) * 0.2;
+      if (a.kind !== "arrow") { a.el.classList.remove(`k-${a.kind}`); a.kind = "arrow"; }
+      a.el.style.opacity = a.op.toFixed(3);
+      a.el.style.transform = `translate3d(${a.x.toFixed(1)}px,${a.y.toFixed(1)}px,0) rotate(${a.rot.toFixed(1)}deg)`;
+    }
+  }
+
   private idle = false;
   private tick = () => {
     if (!this.visible) return;
+    if (this.flockOn) return this.flockTick(performance.now());
     // Sin trabajos en curso ni punteros visibles: no hace nada en este cuadro (ahorra CPU).
-    if (this.idle && !Array.from(this.tasks).some((t) => { const p = t.tl.progress(); return p > 0.0005 && p < 0.9995; })) return;
+    if (this.idle && !this.circling(performance.now()) && !Array.from(this.tasks).some((t) => { const p = t.tl.progress(); return p > 0.0005 && p < 0.9995; })) return;
     const lr = this.layer.getBoundingClientRect();
     const now = performance.now();
     const vw = innerWidth, vh = innerHeight;
@@ -94,9 +150,13 @@ class Director {
 
     this.agents.forEach((a, i) => {
       const b = best.get(i);
+      // Al salir de la bandada, cada puntero se endereza suavemente.
+      if (!b && this.circling(now)) { this.fly(a, i, now); return; }
+      a.rot += (0 - a.rot) * 0.14;
       if (!b) {
         a.op += (0 - a.op) * 0.12;
         a.el.style.opacity = a.op < 0.02 ? "0" : a.op.toFixed(3);
+        if (a.op >= 0.02) a.el.style.transform = `translate3d(${a.x.toFixed(1)}px,${a.y.toFixed(1)}px,0) rotate(${a.rot.toFixed(1)}deg)`;
         return;
       }
       const p = b.t.probe;
@@ -109,7 +169,7 @@ class Director {
       const target = b.rank === 1 ? Math.max(0, 1 - (now - b.t.doneAt) / 900) : 1;
       a.op += (target - a.op) * 0.15;
       a.el.style.opacity = a.op.toFixed(3);
-      a.el.style.transform = `translate3d(${a.x.toFixed(1)}px,${a.y.toFixed(1)}px,0) scale(${p.scale || 1})`;
+      a.el.style.transform = `translate3d(${a.x.toFixed(1)}px,${a.y.toFixed(1)}px,0) rotate(${a.rot.toFixed(1)}deg) scale(${p.scale || 1})`;
       if (p.kind !== a.kind) { a.el.classList.remove(`k-${a.kind}`); a.el.classList.add(`k-${p.kind}`); a.kind = p.kind; }
     });
     this.settle();
@@ -130,6 +190,9 @@ export function getDirector(layer: HTMLElement) {
   return director;
 }
 export function showCrew() { director?.show(); }
+export function startCrewFlock(layer: HTMLElement) { getDirector(layer).startFlock(); }
+export function endCrewFlock() { director?.endFlock(); }
+export function lowerCrew() { director?.lowerLayer(); }
 export function destroyDirector() { director?.destroy(); director = null; }
 
 // =====================================================================

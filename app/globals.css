@@ -684,3 +684,8 @@ textarea.fi { resize: vertical; min-height: 130px; }
 .lowfx .nav.scrolled .nav-in, .lowfx .hbadge, .lowfx .vcard-play, .lowfx .vcard-badge, .lowfx .about-tag { -webkit-backdrop-filter: none; backdrop-filter: none; }
 .lowfx .nav.scrolled .nav-in { background: rgba(14, 7, 4, 0.94); }
 .lowfx .hbadge, .lowfx .about-tag { background: rgba(16, 8, 4, 0.9); }
+
+/* ============ CARGA: bandada de punteros ============ */
+.crew-agents.on-top { z-index: 20001; }
+.loader-bot { justify-content: space-between; align-items: flex-end; }
+.loader-hint { font-size: 11px; letter-spacing: 0.3em; text-transform: uppercase; color: var(--g2); margin-bottom: 14px; }
