@@ -41,7 +41,6 @@ export default function Hero({ site, mediaUrl }: Props) {
         .from(document.querySelectorAll("[data-nav] .pill"), { y: -12, opacity: 0, duration: 0.6 }, 0.15)
         .fromTo(q(".hvis-media"), { clipPath: "inset(100% 0% 0% 0%)" }, { clipPath: "inset(0% 0% 0% 0%)", duration: 1.8, ease: "expo.inOut", clearProps: "clipPath" }, 0.25)
         .from(q(".hvis-media .hmain, .hvis-media .hvis-ph"), { scale: 1.08, duration: 2.3, transformOrigin: "50% 100%" }, 0.25)
-        .from(chars, { yPercent: 115, rotate: 6, opacity: 0, duration: 1.25, stagger: 0.032 }, 0.75)
         .from(q(".hctas .btn-p"), { y: 24, opacity: 0, duration: 1 }, 1.2)
         .from(q(".socials > *"), { y: 14, opacity: 0, stagger: 0.06, duration: 0.9 }, 1.35);
       // ---- El equipo arranca en la portada: uno escribe, otro estira la foto, otro hace clic ----
@@ -97,41 +96,45 @@ export default function Hero({ site, mediaUrl }: Props) {
             .to(c, { y: "+=30", duration: 0.2 }, 1.05);
         });
 
-        // Título: lo escribe.
+        /**
+         * Texto como en un editor: un puntero ESTIRA el cuadro de texto desde su esquina
+         * y, con el cuadro listo, otro puntero ESCRIBE dentro (letra por letra o palabra
+         * por palabra). El marco queda visible mientras se escribe y luego se desvanece.
+         */
+        const textBox = (el: HTMLElement, units: HTMLElement[], pos: number, per: number) => {
+          if (!units.length) return;
+          const STRETCH = 0.45;
+          const typing = 0.15 + units.length * per + 0.2;
+          job(pos, (t) => {
+            const m = crew.next(); const c = crew.cursor(m, "estirando"); const fr = crew.frame(m);
+            const B = () => crew.box(el);
+            t.fromTo(c, { x: () => B().x - 36, y: () => B().y - 30 }, { x: () => B().x, y: () => B().y, duration: 0.18 })
+              .fromTo(fr, { x: () => B().x - 6, y: () => B().y - 6, width: 0, height: 0, opacity: 1 }, { width: () => B().w + 12, height: () => B().h + 12, duration: STRETCH, ease: "power2.inOut" })
+              .to(c, { x: () => B().x + B().w + 6, y: () => B().y + B().h + 6, duration: STRETCH, ease: "power2.inOut" }, "<")
+              .to(c, { x: "+=30", y: "+=26", duration: 0.2 })
+              .to(fr, { opacity: 0, duration: 0.3 }, 0.18 + STRETCH + typing);
+          });
+          job(pos + 0.18 + STRETCH, (t) => {
+            const c = crew.cursor(crew.next(), "escribiendo", true);
+            const U = (i: number) => crew.box(units[i]);
+            t.fromTo(c, { x: () => U(0).x - 24, y: () => U(0).y + U(0).h + 18 }, { x: () => U(0).x - 2, y: () => U(0).y + U(0).h * 0.5, duration: 0.15 });
+            units.forEach((u, i) => {
+              t.fromTo(u, { opacity: 0 }, { opacity: 1, duration: Math.max(0.02, per * 0.7) }, ">");
+              t.to(c, { x: () => U(i).x + U(i).w, y: () => U(i).y + U(i).h * 0.5, duration: per, ease: "none" }, "<");
+            });
+            t.to(c, { x: "+=26", y: "+=22", duration: 0.2 });
+          });
+        };
+
+        // Título: cuadro estirado + "Hola, soy DevWilly." escrito letra por letra.
         const hhEl = one(".hh");
-        if (hhEl) job(0.45, (t) => {
-          const c = crew.cursor(crew.next(), "escribiendo", true);
-          const H = () => crew.box(hhEl);
-          t.fromTo(c, { x: () => H().x - 60, y: () => H().y + H().h + 30 }, { x: () => H().x - 6, y: () => H().y + H().h * 0.3, duration: 0.3 })
-            .to(c, { x: () => H().x + H().w, y: () => H().y + H().h * 0.62, duration: 1.45, ease: "none" }, 0.35)
-            .to(c, { x: "+=30", y: "+=30", duration: 0.25 });
-        });
-
-        // Subtítulo: lo escribe letra por letra.
+        if (hhEl) textBox(hhEl, chars, 0.3, 0.05);
+        // Subtítulo: cuadro + letra por letra.
         const tag = one(".htag");
-        if (tag) job(1.05, (t) => {
-          const c = crew.cursor(crew.next(), "escribiendo", true);
-          const letters = splitChars(tag);
-          const T = () => crew.box(tag);
-          t.fromTo(c, { x: () => T().x - 40, y: () => T().y + T().h + 30 }, { x: () => T().x - 4, y: () => T().y + T().h / 2, duration: 0.15 })
-            .fromTo(letters, { opacity: 0 }, { opacity: 1, duration: 0.04, stagger: 1 / Math.max(1, letters.length) }, 0.15)
-            .to(c, { x: () => T().x + T().w, duration: 1, ease: "none" }, 0.15)
-            .to(c, { x: "+=30", y: "+=30", duration: 0.2 });
-        });
-
-        // Descripción: la selecciona y aparece.
+        if (tag) textBox(tag, splitChars(tag), 1.15, 0.022);
+        // Descripción: cuadro + palabra por palabra.
         const desc = one(".hdesc");
-        if (desc) job(1.3, (t) => {
-          const m = crew.next(); const c = crew.cursor(m, "seleccionando"); const s = crew.sel(m);
-          const D = () => crew.box(desc);
-          t.fromTo(desc, { opacity: 0, y: 12 }, { opacity: 0, duration: 0.01 }, 0)
-            .fromTo(c, { x: () => D().x - 40, y: () => D().y - 30 }, { x: () => D().x, y: () => D().y, duration: 0.2 }, 0)
-            .fromTo(s, { x: () => D().x, y: () => D().y, width: 0, height: 0, opacity: 1 }, { width: () => D().w, height: () => D().h, duration: 0.55, ease: "power2.inOut" }, 0.2)
-            .to(c, { x: () => D().x + D().w, y: () => D().y + D().h, duration: 0.55, ease: "power2.inOut" }, 0.2)
-            .to(desc, { opacity: 1, y: 0, duration: 0.5 }, 0.7)
-            .to(s, { opacity: 0, duration: 0.3 }, 0.8)
-            .to(c, { x: "+=24", y: "+=24", duration: 0.2 }, 0.8);
-        });
+        if (desc) textBox(desc, splitWords(desc), 1.45, 0.04);
 
         // Insignia "3+ años": la estira desde su esquina.
         const badge = one(".hbadge");
