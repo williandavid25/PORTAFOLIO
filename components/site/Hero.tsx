@@ -173,6 +173,8 @@ export default function Hero({ site, mediaUrl }: Props) {
         });
       }
 
+      // Construcción ágil: toda la línea de tiempo (contenido + punteros) va 1.6x más rápido.
+      tl.timeScale(1.6);
       cleanups.push(onReady(() => { tl.play(); showCrew(); }));
 
 

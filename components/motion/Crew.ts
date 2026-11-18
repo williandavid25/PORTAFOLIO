@@ -34,7 +34,7 @@ const rand = (a: number, b: number) => a + Math.random() * (b - a);
 // Director: los punteros y su bucle. Un puntero solo se ve cuando tiene
 // un trabajo por hacer cerca de la pantalla: llega, lo hace y se va.
 // =====================================================================
-type Agent = { el: HTMLElement; x: number; y: number; op: number; kind: Kind; rot: number };
+type Agent = { el: HTMLElement; x: number; y: number; op: number; kind: Kind; rot: number; vx: number; vy: number };
 
 class Director {
   readonly count: number;
@@ -55,7 +55,7 @@ class Director {
       el.innerHTML = `${ICONS.arrow}${ICONS.ibeam}${ICONS.pen}`;
       el.style.opacity = "0";
       this.overlay.appendChild(el);
-      this.agents.push({ el, x: rand(0, innerWidth), y: rand(0, innerHeight), op: 0, kind: "arrow", rot: 0 });
+      this.agents.push({ el, x: rand(0, innerWidth), y: rand(0, innerHeight), op: 0, kind: "arrow", rot: 0, vx: 0, vy: 0 });
     }
     gsap.ticker.add(this.tick);
   }
@@ -82,7 +82,9 @@ class Director {
   private flockEndAt = 0;
   endFlock() { this.flockOn = false; this.flockEndAt = performance.now(); }
   /** Justo después de la carga: los que aún no tienen trabajo siguen volando en formación. */
-  private circling(now: number) { return this.flockEndAt > 0 && now - this.flockEndAt < 3400; }
+  private circling(now: number) { return this.flockEndAt > 0 && now - this.flockEndAt < 1400; }
+  /** ¿Tiene un trabajo de la portada que todavía no empieza? */
+  private pendingHero(i: number) { for (const t of this.tasks) if (t.agent === i && !t.el && t.tl.progress() <= 0.0005) return true; return false; }
   /** Cuando la pantalla de carga desaparece, vuelven a su capa normal (debajo del menú). */
   lowerLayer() { this.overlay.classList.remove("on-top"); }
 
@@ -106,6 +108,7 @@ class Director {
       const side = i % 2 ? 1 : -1, rank = Math.ceil(i / 2);
       const spread = side * (rank * 7 + 6 * Math.sin(t * 2.2 + i));
       const tx = L.x + nx * spread, ty = L.y + ny * spread;
+      a.vx = (tx - a.x) * 0.16; a.vy = (ty - a.y) * 0.16;
       a.x += (tx - a.x) * 0.16;
       a.y += (ty - a.y) * 0.16;
       // La punta del cursor (apunta arriba-izquierda, −135°) mira hacia donde vuela.
@@ -151,9 +154,11 @@ class Director {
     this.agents.forEach((a, i) => {
       const b = best.get(i);
       // Al salir de la bandada, cada puntero se endereza suavemente.
-      if (!b && this.circling(now)) { this.fly(a, i, now); return; }
+      if (!b && this.circling(now) && this.pendingHero(i)) { this.fly(a, i, now); return; }
       a.rot += (0 - a.rot) * 0.14;
       if (!b) {
+        // Sale volando en la dirección que llevaba mientras se desvanece.
+        if (a.vx || a.vy) { a.x += a.vx * 1.6; a.y += a.vy * 1.6; a.vx *= 0.97; a.vy *= 0.97; }
         a.op += (0 - a.op) * 0.12;
         a.el.style.opacity = a.op < 0.02 ? "0" : a.op.toFixed(3);
         if (a.op >= 0.02) a.el.style.transform = `translate3d(${a.x.toFixed(1)}px,${a.y.toFixed(1)}px,0) rotate(${a.rot.toFixed(1)}deg)`;
