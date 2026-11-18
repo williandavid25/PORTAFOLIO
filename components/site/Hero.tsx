@@ -6,6 +6,7 @@ import { useEffect, useRef } from "react";
 import gsap from "gsap";
 import { onReady, splitChars, splitWords } from "@/components/motion/MotionRoot";
 import { Crew, showCrew } from "@/components/motion/Crew";
+import { cue, sfx } from "@/components/motion/sfx";
 import Icon from "./Icon";
 import Socials from "./Socials";
 import type { SiteData } from "@/lib/content";
@@ -67,6 +68,7 @@ export default function Hero({ site, mediaUrl }: Props) {
             .to(c, { x: () => N().x + N().w - 30, y: () => N().y + N().h, duration: 0.7, ease: "power2.inOut" }, "<")
             .to(s, { opacity: 0, duration: 0.35 })
             .to(c, { y: "+=30", duration: 0.2 }, "<");
+          cue(t, () => sfx.click(c.x), 0.25);
         });
 
         // Foto: estira el marco hacia arriba mientras se revela.
@@ -80,6 +82,8 @@ export default function Hero({ site, mediaUrl }: Props) {
             .to(c, { y: () => M().y, duration: 1.8, ease: "expo.inOut" }, 0.15)
             .to(fr, { opacity: 0, duration: 0.35 }, 2)
             .to(c, { x: "+=30", y: "-=20", duration: 0.2 }, 2);
+          cue(t, () => sfx.click(c.x), 0.16);
+          cue(t, () => sfx.whoosh(1.1, 0.4), 0.3);
         });
 
         // Etiqueta "Disponible": la arrastra desde la derecha.
@@ -94,6 +98,8 @@ export default function Hero({ site, mediaUrl }: Props) {
             .to(c, { x: () => C().x + C().w - 26, duration: 0.75 }, 0.25)
             .to(c, { scale: 1, duration: 0.05 }, 1)
             .to(c, { y: "+=30", duration: 0.2 }, 1.05);
+          cue(t, () => sfx.click(c.x), 0.2);
+          cue(t, () => sfx.whoosh(0.6, 0.3), 0.26);
         });
 
         /**
@@ -113,6 +119,8 @@ export default function Hero({ site, mediaUrl }: Props) {
               .to(c, { x: () => B().x + B().w + 6, y: () => B().y + B().h + 6, duration: STRETCH, ease: "power2.inOut" }, "<")
               .to(c, { x: "+=30", y: "+=26", duration: 0.2 })
               .to(fr, { opacity: 0, duration: 0.3 }, 0.18 + STRETCH + typing);
+            cue(t, () => sfx.click(c.x), 0.18);
+            cue(t, () => sfx.whoosh(0.45, 0.26), 0.2);
           });
           job(pos + 0.18 + STRETCH, (t) => {
             const c = crew.cursor(crew.next(), "escribiendo", true);
@@ -120,6 +128,7 @@ export default function Hero({ site, mediaUrl }: Props) {
             t.fromTo(c, { x: () => U(0).x - 24, y: () => U(0).y + U(0).h + 18 }, { x: () => U(0).x - 2, y: () => U(0).y + U(0).h * 0.5, duration: 0.15 });
             units.forEach((u, i) => {
               t.fromTo(u, { opacity: 0 }, { opacity: 1, duration: Math.max(0.02, per * 0.7) }, ">");
+              cue(t, () => sfx.key(c.x), "<");
               t.to(c, { x: () => U(i).x + U(i).w, y: () => U(i).y + U(i).h * 0.5, duration: per, ease: "none" }, "<");
             });
             t.to(c, { x: "+=26", y: "+=22", duration: 0.2 });
@@ -146,6 +155,7 @@ export default function Hero({ site, mediaUrl }: Props) {
             .to(badge, { scale: 1, duration: 0.7, ease: "power2.inOut" }, 0.2)
             .to(c, { x: () => Bd().x + badge.offsetWidth, y: () => Bd().y + badge.offsetHeight, duration: 0.7, ease: "power2.inOut" }, 0.2)
             .to(c, { x: "+=24", y: "+=24", duration: 0.2 });
+          cue(t, () => sfx.click(c.x), 0.2);
         });
 
         // Botón "Contáctame": lo sube arrastrando.
@@ -160,6 +170,8 @@ export default function Hero({ site, mediaUrl }: Props) {
             .to(c, { y: () => Bo().y + Bo().h / 2, duration: 0.7 }, 0.25)
             .to(c, { scale: 1, duration: 0.05 }, 0.95)
             .to(c, { x: "+=30", y: "+=30", duration: 0.2 }, 1);
+          cue(t, () => sfx.click(c.x), 0.2);
+          cue(t, () => sfx.whoosh(0.55, 0.3), 0.26);
         });
 
         // ---- Más trabajos para que ningún puntero de la carga se quede sin hacer nada ----
@@ -174,6 +186,7 @@ export default function Hero({ site, mediaUrl }: Props) {
             .fromTo(r, { x: () => E().x + E().w / 2, y: () => E().y + E().h / 2, scale: 0.2, opacity: 0.8 }, { scale: 1.3, opacity: 0, duration: 0.45, immediateRender: false })
             .to(c, { scale: 1, duration: 0.08 }, "<")
             .to(c, { y: "+=26", duration: 0.2 });
+          cue(t, () => sfx.click(c.x), 0.36);
         });
         const logo = document.querySelector<HTMLElement>("[data-nav] .logo");
         if (visible(logo)) tap(logo, 0.1);
@@ -199,6 +212,7 @@ export default function Hero({ site, mediaUrl }: Props) {
             .fromTo(r, { x: () => Bt().x + Bt().w * 0.6, y: () => Bt().y + Bt().h * 0.55, scale: 0.2, opacity: 0.9 }, { scale: 1.8, opacity: 0, duration: 0.6, immediateRender: false })
             .to(c, { scale: 1, duration: 0.1 }, "<")
             .to(c, { x: "+=40", y: "+=30", duration: 0.25 });
+          cue(t, () => sfx.click(c.x), 0.5);
         });
       }
 

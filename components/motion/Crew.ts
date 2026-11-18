@@ -2,6 +2,7 @@
 
 import gsap from "gsap";
 import { splitChars, splitWords } from "./split";
+import { cue, sfx } from "./sfx";
 
 /**
  * “El equipo”: hasta 20 punteros en blanco y negro (12 en el celular) que
@@ -336,6 +337,7 @@ export class Crew {
     tl.fromTo(c, { x: () => this.cx(B(0).x - 70), y: () => B(0).y + B(0).h + 50 }, { x: () => this.cx(B(0).x - 6), y: () => B(0).y + B(0).h * 0.5, duration: 0.3, ease: "power2.out" });
     words.forEach((w, i) => {
       tl.fromTo(w, { yPercent: 115, rotate: 4 }, { yPercent: 0, rotate: 0, duration: 0.32, ease: "power3.out" });
+      cue(tl, () => sfx.key(c.x), "<");
       tl.to(c, { x: () => this.cx(B(i).x + B(i).w), y: () => B(i).y + B(i).h * 0.5, duration: 0.32, ease: "none" }, "<");
     });
     tl.to(c, { x: "+=40", y: "+=30", duration: 0.2 });
@@ -353,6 +355,7 @@ export class Crew {
     tl.fromTo(c, { x: () => this.cx(B(0).x - 80), y: () => B(0).y + B(0).h + 40 }, { x: () => this.cx(B(0).x - 4), y: () => B(0).y + B(0).h * 0.5, duration: 0.25, ease: "power2.out" });
     chars.forEach((ch, i) => {
       tl.fromTo(ch, { opacity: 0, y: 14, scale: 0.6 }, { opacity: 1, y: 0, scale: 1, duration: 0.1, ease: "back.out(3)" });
+      cue(tl, () => sfx.key(c.x), "<");
       tl.to(c, { x: () => this.cx(B(i).x + B(i).w), duration: 0.1, ease: "none" }, "<");
     });
     tl.to(c, { x: "+=40", y: "+=30", duration: 0.2 });
@@ -372,6 +375,7 @@ export class Crew {
       tl.to(c, { x: () => this.cx(B().x + (B().w * i) / steps), y: () => B().y + B().h * (i % 2 ? 0.3 : 0.75), duration: 0.8 / steps, ease: "sine.inOut" }, i === 1 ? "<" : ">");
     }
     tl.to(c, { x: "+=30", y: "-=20", duration: 0.2 });
+    cue(tl, () => sfx.whoosh(0.8, 0.22), 0.2);
     return tl;
   }
 
@@ -390,6 +394,8 @@ export class Crew {
       .to(c, { x: () => this.cx(B().x + B().w), y: () => B().y + B().h, duration: 0.6, ease: "power2.inOut" }, "<")
       .to(f, { opacity: 0, duration: 0.15 })
       .to(c, { x: "+=30", y: "+=20", duration: 0.15 }, "<");
+    cue(tl, () => sfx.click(c.x), 0.25);
+    cue(tl, () => sfx.whoosh(0.55, 0.32), 0.33);
     return tl;
   }
 
@@ -408,6 +414,8 @@ export class Crew {
       .to(c, { x: () => this.cx(B().x + gx()), y: () => B().y + 26, duration: 0.6, ease: "power2.out" }, "<")
       .to(c, { scale: 1, duration: 0.06 })
       .to(c, { y: "+=24", duration: 0.15 });
+    cue(tl, () => sfx.click(c.x), 0.22);
+    cue(tl, () => sfx.whoosh(0.6, 0.38), 0.3);
     return tl;
   }
 
@@ -422,6 +430,7 @@ export class Crew {
       .fromTo(bar, { width: "0%" }, { width: `${level}%`, duration: 0.6, ease: "none" })
       .to(c, { x: () => this.cx(B().x + (B().w * level) / 100), duration: 0.6, ease: "none" }, "<")
       .to(c, { y: "+=20", duration: 0.1 });
+    cue(tl, () => sfx.click(c.x), 0.2);
     return tl;
   }
 
@@ -439,6 +448,7 @@ export class Crew {
       .to(c, { scale: 1, duration: 0.05 }, "<")
       .fromTo(o, { v: 0 }, { v: target, duration: 0.55, ease: "power2.out", onUpdate: () => { el.textContent = `${Math.round(o.v)}${suffix}`; } }, "<")
       .to(c, { y: "+=24", duration: 0.1 });
+    cue(tl, () => sfx.click(c.x), 0.25);
     return tl;
   }
 
@@ -452,6 +462,7 @@ export class Crew {
       .fromTo(line, { scaleX: 0 }, { scaleX: 1, duration: 1, ease: "none", transformOrigin: "left center" })
       .to(c, { x: () => this.cx(B().x + B().w), duration: 1, ease: "none" }, "<")
       .to(c, { y: "+=24", duration: 0.1 });
+    cue(tl, () => sfx.whoosh(0.9, 0.3), 0.15);
     return tl;
   }
 
@@ -469,6 +480,7 @@ export class Crew {
       .to(el, { opacity: 1, y: 0, scale: 1, duration: 0.45, ease: "power3.out" })
       .to(s, { opacity: 0, duration: 0.3 }, "<0.1")
       .to(c, { x: "+=24", y: "+=20", duration: 0.2 }, "<");
+    cue(tl, () => sfx.click(c.x), 0.2);
     return tl;
   }
 

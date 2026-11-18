@@ -7,6 +7,7 @@ import { ScrollTrigger } from "gsap/ScrollTrigger";
 import Lenis from "lenis";
 import { Crew, destroyDirector, onScroll, showCrew } from "./Crew";
 import { splitChars, splitWords } from "./split";
+import SoundToggle from "./SoundToggle";
 
 gsap.registerPlugin(ScrollTrigger);
 export { splitChars, splitWords };
@@ -262,6 +263,7 @@ export default function MotionRoot({ children }: { children: ReactNode }) {
     <MotionCtx.Provider value={api}>
       <div className="progress" aria-hidden="true" />
       <div className="grain" aria-hidden="true" />
+      <SoundToggle />
       <div className="page-wrap">
         <div className="crew" ref={layerRef} aria-hidden="true" />
         {children}

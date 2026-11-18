@@ -4,6 +4,7 @@ import { useEffect, useRef, useState } from "react";
 import gsap from "gsap";
 import { markReady, splitChars } from "@/components/motion/MotionRoot";
 import { endCrewFlock, lowerCrew, startCrewFlock } from "@/components/motion/Crew";
+import { sfx } from "@/components/motion/sfx";
 
 /**
  * Pantalla de carga (solo la primera vez por sesión y solo en la portada).
@@ -31,11 +32,11 @@ export default function Loader({ name }: { name: string }) {
     const num = el.querySelector<HTMLElement>(".loader-count span")!;
     const o = { v: 0 };
     const tl = gsap.timeline({ onComplete: () => { lowerCrew(); setShow(false); } });
-    tl.from(chars, { yPercent: 110, opacity: 0, stagger: 0.03, duration: 0.6, ease: "expo.out" }, 0.05)
+    tl.from(chars, { yPercent: 105, stagger: 0.045, duration: 0.75, ease: "expo.out" }, 0.05)
       .to(o, { v: 100, duration: 0.95, ease: "power2.inOut", onUpdate: () => { num.textContent = String(Math.round(o.v)); } }, 0)
       // Termina la carga: los punteros rompen la formación y van a construir la portada.
-      .add(endCrewFlock)
-      .to(chars, { yPercent: -110, opacity: 0, stagger: 0.02, duration: 0.3, ease: "expo.in" })
+      .add(() => { endCrewFlock(); sfx.whoosh(0.9, 0.6); })
+      .to(chars, { yPercent: -105, stagger: 0.025, duration: 0.35, ease: "expo.in" })
       .to(el.querySelectorAll(".loader-top,.loader-bot"), { opacity: 0, duration: 0.35 }, "<")
       .to(el, { clipPath: "inset(0 0 100% 0)", duration: 0.7, ease: "expo.inOut" }, "-=.12")
       .add(markReady, "-=.35");
@@ -46,8 +47,8 @@ export default function Loader({ name }: { name: string }) {
   return (
     <div className="loader" ref={ref} aria-hidden="true">
       <div className="loader-glow" />
-      <div className="loader-top"><span>Portfolio</span><span>{new Date().getFullYear()}</span></div>
-      <div className="loader-mid"><span className="loader-name">{name}</span></div>
+      <div className="loader-top"><span>{name}</span><span>{new Date().getFullYear()}</span></div>
+      <div className="loader-mid"><span className="loader-name">Portfolio</span></div>
       <div className="loader-bot"><span className="loader-hint">Construyendo la experiencia</span><div className="loader-count"><span>0</span></div></div>
     </div>
   );
