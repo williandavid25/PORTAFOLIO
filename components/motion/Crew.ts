@@ -174,10 +174,10 @@ class Director {
     Array.from(ahead.entries())
       .filter(([i]) => { const b = best.get(i); return (!b || b.rank === 1) && !(this.circling(now) && this.pendingHero(i)); })
       .sort((p, q) => p[1] - q[1])
-      .slice(0, vw < 640 ? 5 : 7)
+      .slice(0, vw < 640 ? 6 : 9)
       .forEach(([i], k) => squad.set(i, k));
     const lead = Math.max(-1, Math.min(1, this.vel / 14)); // −1 sube, +1 baja
-    const sx = vw - (vw < 640 ? 54 : 96), syq = vh * 0.8 + lead * 46;
+    const drop = lead * 40; // al desplazar, se quedan un poco atrás (como si bajaran contigo)
 
     this.agents.forEach((a, i) => {
       const b = best.get(i);
@@ -185,9 +185,12 @@ class Director {
       if (!b && this.circling(now) && this.pendingHero(i)) { this.fly(a, i, now); return; }
       const slot = squad.get(i);
       if (slot !== undefined) {
-        const rank = Math.ceil(slot / 2), side = slot % 2 ? 1 : -1, ts = now / 1000;
-        const tx = sx + side * rank * (vw < 640 ? 14 : 20) + Math.sin(ts * 1.7 + i) * 3;
-        const ty = syq - rank * 18 * (lead < 0 ? -1 : 1) + Math.cos(ts * 2.1 + i) * 3;
+        // Esparcidos por toda la pantalla: cada puntero tiene su propio lugar (secuencia áurea,
+        // así nunca se amontonan) y flota suave a su alrededor.
+        const ts = now / 1000;
+        const fx = (i * 0.618034 + 0.11) % 1, fy = (i * 0.381966 + 0.27) % 1;
+        const tx = vw * (0.05 + 0.88 * fx) + Math.sin(ts * 0.6 + i * 1.7) * 26;
+        const ty = vh * (0.16 + 0.7 * fy) + Math.cos(ts * 0.5 + i * 2.3) * 20 - drop;
         if (a.op < 0.05) { a.x = tx; a.y = ty + 40; }
         a.x += (tx - a.x) * 0.1;
         a.y += (ty - a.y) * 0.1;
