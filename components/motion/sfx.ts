@@ -21,11 +21,11 @@ const R = (a: number, b: number) => a + Math.random() * (b - a);
 const pick = <T,>(a: T[]) => a[Math.floor(Math.random() * a.length)];
 
 /** Crea/reanuda el audio (al cargar, y otra vez con cada gesto hasta que suene). */
-export function unlockAudio() {
-  if (typeof window === "undefined") return;
+export function unlockAudio(): Promise<void> {
+  if (typeof window === "undefined") return Promise.resolve();
   if (!S) {
     const AC = window.AudioContext ?? (window as unknown as { webkitAudioContext?: typeof AudioContext }).webkitAudioContext;
-    if (!AC) return;
+    if (!AC) return Promise.resolve();
     const ac = new AC();
     // Compresor suave: varios punteros a la vez nunca suenan fuerte ni saturan.
     const comp = ac.createDynamicsCompressor();
@@ -51,7 +51,35 @@ export function unlockAudio() {
     for (let i = 0; i < d.length; i++) d[i] = Math.random() * 2 - 1;
     S = { ac, out, verb, noise };
   }
-  if (S.ac.state === "suspended") S.ac.resume().catch(() => {});
+  iosUnmute();
+  if (S.ac.state === "running") return Promise.resolve();
+  // Un búfer silencioso dentro del gesto: algunos iPhone/iPad lo necesitan para "despertar".
+  try { const b = S.ac.createBufferSource(); b.buffer = S.ac.createBuffer(1, 1, 22050); b.connect(S.ac.destination); b.start(0); } catch {}
+  return S.ac.resume().catch(() => {});
+}
+
+/**
+ * iPhone: el botón de silencio apaga el audio web. Un <audio> silencioso en bucle
+ * cambia la sesión a "reproducción" para que los efectos se oigan igual (como un video).
+ */
+let iosEl: HTMLAudioElement | null = null;
+function iosUnmute() {
+  try {
+    const nav = navigator as Navigator & { audioSession?: { type: string } };
+    if (nav.audioSession) nav.audioSession.type = "playback";
+  } catch {}
+  if (iosEl || !/iPad|iPhone|iPod|Macintosh/.test(navigator.userAgent) || !("ontouchend" in document)) return;
+  const rate = 8000, n = rate / 2, buf = new ArrayBuffer(44 + n * 2), v = new DataView(buf);
+  const w = (o: number, s: string) => { for (let i = 0; i < s.length; i++) v.setUint8(o + i, s.charCodeAt(i)); };
+  w(0, "RIFF"); v.setUint32(4, 36 + n * 2, true); w(8, "WAVEfmt "); v.setUint32(16, 16, true); v.setUint16(20, 1, true);
+  v.setUint16(22, 1, true); v.setUint32(24, rate, true); v.setUint32(28, rate * 2, true); v.setUint16(32, 2, true);
+  v.setUint16(34, 16, true); w(36, "data"); v.setUint32(40, n * 2, true);
+  iosEl = document.createElement("audio");
+  iosEl.setAttribute("x-webkit-airplay", "deny");
+  iosEl.loop = true;
+  iosEl.preload = "auto";
+  iosEl.src = URL.createObjectURL(new Blob([buf], { type: "audio/wav" }));
+  iosEl.play().catch(() => { iosEl = null; });
 }
 
 export const isMuted = () => muted;
