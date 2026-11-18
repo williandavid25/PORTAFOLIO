@@ -38,13 +38,12 @@ export default function Hero({ site, mediaUrl }: Props) {
       const tl = gsap.timeline({ paused: true, defaults: { ease: "expo.out" }, onComplete: loops });
       tl.from(q(".hero-card"), { scale: 0.94, opacity: 0, duration: 1.5 }, 0)
         .from(q(".hglow"), { scale: 0.2, opacity: 0, duration: 2.3 }, 0.1)
-        .from(document.querySelectorAll("[data-nav] > *"), { y: -24, opacity: 0, stagger: 0.08, duration: 1 }, 0.45)
+        .from(document.querySelectorAll("[data-nav] .pill"), { y: -12, opacity: 0, duration: 0.6 }, 0.15)
         .fromTo(q(".hvis-media"), { clipPath: "inset(100% 0% 0% 0%)" }, { clipPath: "inset(0% 0% 0% 0%)", duration: 1.8, ease: "expo.inOut", clearProps: "clipPath" }, 0.25)
         .from(q(".hvis-media .hmain, .hvis-media .hvis-ph"), { scale: 1.08, duration: 2.3, transformOrigin: "50% 100%" }, 0.25)
         .from(chars, { yPercent: 115, rotate: 6, opacity: 0, duration: 1.25, stagger: 0.032 }, 0.75)
         .from(q(".hctas .btn-p"), { y: 24, opacity: 0, duration: 1 }, 1.2)
-        .from(q(".socials > *"), { y: 14, opacity: 0, stagger: 0.06, duration: 0.9 }, 1.35)
-        .from(q(".hscroll"), { opacity: 0, x: 20, duration: 1 }, 2.4);
+        .from(q(".socials > *"), { y: 14, opacity: 0, stagger: 0.06, duration: 0.9 }, 1.35);
       // ---- El equipo arranca en la portada: uno escribe, otro estira la foto, otro hace clic ----
       const layer = document.querySelector<HTMLElement>(".crew");
       if (layer) {
@@ -162,13 +161,14 @@ export default function Hero({ site, mediaUrl }: Props) {
 
         // ---- Más trabajos para que ningún puntero de la carga se quede sin hacer nada ----
         const visible = (el: Element | null): el is HTMLElement => !!el && (el as HTMLElement).offsetWidth > 0 && (el as HTMLElement).offsetHeight > 0;
-        /** Un clic con onda sobre un elemento (ya visible): el puntero llega, presiona y sigue. */
-        const tap = (el: HTMLElement, pos: number) => job(pos, (t) => {
+        /** El puntero llega, hace clic y el elemento se crea en ese instante (con una onda). */
+        const tap = (el: HTMLElement, pos: number, create = true) => job(pos, (t) => {
           const m = crew.next(); const c = crew.cursor(m, "ajustando"); const r = crew.ripple(m);
           const E = () => crew.box(el);
+          if (create) t.fromTo(el, { opacity: 0, scale: 0.55 }, { opacity: 1, scale: 1, duration: 0.42, ease: "back.out(2.4)" }, 0.4);
           t.fromTo(c, { x: () => E().x + E().w / 2 + 40, y: () => E().y + E().h + 40 }, { x: () => E().x + E().w / 2, y: () => E().y + E().h / 2, duration: 0.35 })
             .to(c, { scale: 0.82, duration: 0.06 })
-            .fromTo(r, { x: () => E().x + E().w / 2, y: () => E().y + E().h / 2, scale: 0.2, opacity: 0.8 }, { scale: 1.3, opacity: 0, duration: 0.45 })
+            .fromTo(r, { x: () => E().x + E().w / 2, y: () => E().y + E().h / 2, scale: 0.2, opacity: 0.8 }, { scale: 1.3, opacity: 0, duration: 0.45, immediateRender: false })
             .to(c, { scale: 1, duration: 0.08 }, "<")
             .to(c, { y: "+=26", duration: 0.2 });
         });
@@ -182,9 +182,9 @@ export default function Hero({ site, mediaUrl }: Props) {
         const scrollHint = one(".hscroll");
         if (visible(scrollHint)) tap(scrollHint, 1.6);
         const name = one(".hh em");
-        if (visible(name)) tap(name, 1.25);
+        if (visible(name)) tap(name, 1.25, false);
         const dot = one(".chip .dot");
-        if (visible(dot)) tap(dot, 0.95);
+        if (visible(dot)) tap(dot, 0.95, false);
 
         // Botón "Ver portafolio": lo revisa con un clic.
         const btnP = one(".hctas .btn-p");
@@ -193,14 +193,14 @@ export default function Hero({ site, mediaUrl }: Props) {
           const Bt = () => crew.box(btnP);
           t.fromTo(c, { x: () => Bt().x + Bt().w + 60, y: () => Bt().y + Bt().h + 50 }, { x: () => Bt().x + Bt().w * 0.6, y: () => Bt().y + Bt().h * 0.55, duration: 0.5 })
             .to(c, { scale: 0.82, duration: 0.08 })
-            .fromTo(r, { x: () => Bt().x + Bt().w * 0.6, y: () => Bt().y + Bt().h * 0.55, scale: 0.2, opacity: 0.9 }, { scale: 1.8, opacity: 0, duration: 0.6 })
+            .fromTo(r, { x: () => Bt().x + Bt().w * 0.6, y: () => Bt().y + Bt().h * 0.55, scale: 0.2, opacity: 0.9 }, { scale: 1.8, opacity: 0, duration: 0.6, immediateRender: false })
             .to(c, { scale: 1, duration: 0.1 }, "<")
             .to(c, { x: "+=40", y: "+=30", duration: 0.25 });
         });
       }
 
       // Construcción ágil: toda la línea de tiempo (contenido + punteros) va 1.6x más rápido.
-      tl.timeScale(1.6);
+      tl.timeScale(1.25);
       cleanups.push(onReady(() => { tl.play(); showCrew(); }));
 
 

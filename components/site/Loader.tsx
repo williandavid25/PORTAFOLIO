@@ -35,10 +35,10 @@ export default function Loader({ name }: { name: string }) {
       .to(o, { v: 100, duration: 0.95, ease: "power2.inOut", onUpdate: () => { num.textContent = String(Math.round(o.v)); } }, 0)
       // Termina la carga: los punteros rompen la formación y van a construir la portada.
       .add(endCrewFlock)
-      .add(markReady)
       .to(chars, { yPercent: -110, opacity: 0, stagger: 0.02, duration: 0.3, ease: "expo.in" })
       .to(el.querySelectorAll(".loader-top,.loader-bot"), { opacity: 0, duration: 0.35 }, "<")
-      .to(el, { clipPath: "inset(0 0 100% 0)", duration: 0.7, ease: "expo.inOut" }, "-=.12");
+      .to(el, { clipPath: "inset(0 0 100% 0)", duration: 0.7, ease: "expo.inOut" }, "-=.12")
+      .add(markReady, "-=.35");
     return () => { tl.kill(); };
   }, []);
 

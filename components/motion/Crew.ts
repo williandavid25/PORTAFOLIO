@@ -82,7 +82,7 @@ class Director {
   private flockEndAt = 0;
   endFlock() { this.flockOn = false; this.flockEndAt = performance.now(); }
   /** Justo después de la carga: los que aún no tienen trabajo siguen volando en formación. */
-  private circling(now: number) { return this.flockEndAt > 0 && now - this.flockEndAt < 1400; }
+  private circling(now: number) { return this.flockEndAt > 0 && now - this.flockEndAt < 3000; }
   /** ¿Tiene un trabajo de la portada que todavía no empieza? */
   private pendingHero(i: number) { for (const t of this.tasks) if (t.agent === i && !t.el && t.tl.progress() <= 0.0005) return true; return false; }
   /** Cuando la pantalla de carga desaparece, vuelven a su capa normal (debajo del menú). */
@@ -390,7 +390,7 @@ export class Crew {
     const tl = this.tl(vars);
     tl.fromTo(c, { x: () => this.cx(B().x + B().w / 2 + 60), y: () => B().y + B().h + 50 }, { x: () => this.cx(B().x + B().w / 2), y: () => B().y + B().h / 2, duration: 0.25, ease: "power2.out" })
       .to(c, { scale: 0.82, duration: 0.05 })
-      .fromTo(rp, { x: () => B().x + B().w / 2, y: () => B().y + B().h / 2, scale: 0.2, opacity: 0.9 }, { scale: 1.6, opacity: 0, duration: 0.3 })
+      .fromTo(rp, { x: () => B().x + B().w / 2, y: () => B().y + B().h / 2, scale: 0.2, opacity: 0.9 }, { scale: 1.6, opacity: 0, duration: 0.3, immediateRender: false })
       .to(c, { scale: 1, duration: 0.05 }, "<")
       .fromTo(o, { v: 0 }, { v: target, duration: 0.55, ease: "power2.out", onUpdate: () => { el.textContent = `${Math.round(o.v)}${suffix}`; } }, "<")
       .to(c, { y: "+=24", duration: 0.1 });
