@@ -87,7 +87,7 @@ input, textarea, select { font: inherit; color: inherit; }
 .progress { position: fixed; top: 0; left: 0; right: 0; height: 2px; background: var(--grad); transform-origin: left; transform: scaleX(0); z-index: 1100; box-shadow: 0 0 12px rgba(255, 106, 19, 0.7); }
 
 /* ============ CARGA ============ */
-.loader { position: fixed; inset: 0; z-index: 20000; background: #060302; display: flex; flex-direction: column; justify-content: space-between; padding: clamp(22px, 4vw, 44px); clip-path: inset(0 0 0% 0); }
+.loader { position: fixed; inset: 0; z-index: 20000; background: #060302; display: flex; flex-direction: column; justify-content: center; padding: clamp(22px, 4vw, 44px); clip-path: inset(0 0 0% 0); }
 .loader-top { display: flex; justify-content: space-between; font-size: 11px; letter-spacing: 0.3em; text-transform: uppercase; color: var(--g2); }
 .loader-mid { text-align: center; }
 /* PORTFOLIO: letra alta y angosta, rojo arriba que se apaga hacia abajo; cada letra sube desde abajo. */
@@ -706,10 +706,13 @@ textarea.fi { resize: vertical; min-height: 130px; }
 .lowfx .sound-toggle { background: rgba(12, 8, 6, 0.92); }
 
 /* ---- «Entrar» de la pantalla de carga (el toque que activa el sonido) ---- */
-.loader-enter { position: relative; display: inline-flex; align-items: center; gap: 12px; margin-top: clamp(18px, 4vh, 40px); height: 52px; padding: 0 30px 0 24px; border-radius: 999px; border: 1px solid rgba(255, 255, 255, 0.22); background: rgba(255, 255, 255, 0.04); color: #fff; font: 700 12px/1 var(--fb), system-ui, sans-serif; letter-spacing: 0.34em; text-transform: uppercase; cursor: pointer; opacity: 0; transform: translateY(14px); pointer-events: none; transition: opacity 0.5s, transform 0.6s var(--ease-out), border-color 0.3s, background 0.3s; }
+.loader-enter { position: relative; display: inline-flex; align-items: center; gap: 12px; margin-top: clamp(18px, 4vh, 40px); height: 52px; padding: 0 30px 0 24px; border-radius: 999px; border: 1px solid rgba(255, 255, 255, 0.22); background: rgba(255, 255, 255, 0.04); color: #fff; font: 700 12px/1 var(--fb), system-ui, sans-serif; letter-spacing: 0.34em; text-transform: uppercase; cursor: pointer; opacity: 0; transform: translateY(14px); pointer-events: none; transition: opacity 0.5s, transform 0.35s var(--ease-out), border-color 0.3s, background 0.35s, box-shadow 0.35s, text-shadow 0.35s; }
 .loader.gated .loader-enter { opacity: 1; transform: none; pointer-events: auto; }
 .loader.gated .loader-enter::before { content: ""; position: absolute; inset: -1px; border-radius: inherit; border: 1px solid rgba(200, 29, 31, 0.7); animation: enterPulse 1.8s ease-out infinite; pointer-events: none; }
-.loader-enter:hover { border-color: rgba(255, 255, 255, 0.5); background: rgba(200, 29, 31, 0.16); }
+/* Al pasar el puntero: el botón se enciende en rojo con un halo de luz. */
+.loader.gated .loader-enter:hover, .loader.gated .loader-enter:focus-visible { border-color: #ff3b3e; background: linear-gradient(135deg, #d7262a, #8e0f13); box-shadow: 0 0 0 1px rgba(255, 59, 62, 0.45), 0 0 26px rgba(225, 32, 36, 0.6), 0 0 80px rgba(200, 29, 31, 0.35); text-shadow: 0 0 12px rgba(255, 255, 255, 0.7); transform: translateY(-2px) scale(1.04); }
+.loader-enter:hover .eq i, .loader-enter:focus-visible .eq i { background: #fff; }
+.loader.gated .loader-enter:active { transform: scale(0.97); }
 .loader-enter:focus-visible { outline: 2px solid #fff; outline-offset: 4px; }
 .loader-enter .eq { display: inline-flex; align-items: flex-end; gap: 2px; height: 13px; }
 .loader-enter .eq i { width: 2px; height: 4px; border-radius: 1px; background: #c81d1f; animation: eqb 0.9s ease-in-out infinite; }

@@ -44,7 +44,7 @@ export function unlockAudio(): Promise<void> {
     const conv = ac.createConvolver();
     conv.buffer = ir;
     const verb = ac.createGain();
-    verb.gain.value = 0.3;
+    verb.gain.value = 0.2;
     verb.connect(conv).connect(comp);
     const noise = ac.createBuffer(1, ac.sampleRate, ac.sampleRate);
     const d = noise.getChannelData(0);
@@ -97,6 +97,16 @@ const gate = (k: string, ms: number) => {
   if (n - (last[k] ?? -1e9) < ms) return false;
   last[k] = n;
   return true;
+};
+/**
+ * Orden profesional: un sonido a la vez por "carril". Golpes (clic, pop, encaje,
+ * caída, campanita) con un respiro entre uno y otro; el aire (whoosh, roce, pluma)
+ * nunca se encima; y el tecleo se calla un instante cuando suena un golpe.
+ */
+const typeOk = () => {
+  const n = performance.now();
+  if (n - (last.fx ?? -1e9) < 60) return false;
+  return gate("key", 45);
 };
 const at = (d = 0.004) => S!.ac.currentTime + d;
 
@@ -171,7 +181,7 @@ const NOTES = [523.25, 587.33, 659.25, 783.99, 880, 1046.5, 1174.66, 1318.5];
 export const sfx = {
   /** Clic de mouse: 3 variantes (seco, suave, doble) con tono al azar. */
   click(x?: number) {
-    if (!ready() || !gate("click", 65)) return;
+    if (!ready() || !gate("fx", 150)) return;
     const t = at(0.005), p = panFor(x), k = R(0.85, 1.18), v = pick([0, 1, 2]);
     if (v === 0) {
       burst(t, 0.02, "bandpass", 4300 * k, 1.4, 0.48, p, 0.08);
@@ -189,7 +199,7 @@ export const sfx = {
   },
   /** Tecla: cada una distinta (tono, dureza, lado), como un teclado mecánico real. */
   key(x?: number) {
-    if (!ready() || !gate("key", 30)) return;
+    if (!ready() || !typeOk()) return;
     const t = at(0.003), p = panFor(x) + R(-0.08, 0.08);
     burst(t, R(0.02, 0.034), "bandpass", R(2200, 4400), R(1.6, 2.8), R(0.22, 0.36), p, 0.05);
     tone(t, R(240, 360), 110, R(0.03, 0.05), R(0.06, 0.1), "sine", p);
@@ -197,21 +207,21 @@ export const sfx = {
   },
   /** Barra espaciadora: más grave y amplia. */
   space(x?: number) {
-    if (!ready() || !gate("key", 30)) return;
+    if (!ready() || !typeOk()) return;
     const t = at(0.003), p = panFor(x);
     burst(t, 0.05, "bandpass", R(1100, 1500), 1.2, 0.34, p, 0.08);
     tone(t, R(170, 210), 80, 0.07, 0.14, "sine", p);
   },
   /** Pop burbujeante al crear un elemento. */
   pop(x?: number) {
-    if (!ready() || !gate("pop", 55)) return;
+    if (!ready() || !gate("fx", 150)) return;
     const t = at(0.006), p = panFor(x), f = R(420, 640);
     tone(t, f, f * 2.4, 0.07, 0.22, "sine", p, 0.25, 0.003);
     burst(t, 0.025, "bandpass", f * 4, 3, 0.12, p);
   },
   /** Snap: el marco encaja en su lugar (golpe corto y brillante). */
   snap(x?: number) {
-    if (!ready() || !gate("snap", 90)) return;
+    if (!ready() || !gate("fx", 150)) return;
     const t = at(0.004), p = panFor(x), k = R(0.9, 1.12);
     burst(t, 0.03, "highpass", 3800 * k, 0.9, 0.32, p, 0.2);
     tone(t, 2200 * k, 1700 * k, 0.06, 0.08, "triangle", p, 0.25);
@@ -219,20 +229,20 @@ export const sfx = {
   },
   /** Swipe: roce de arrastre (más corto y "de fricción" que el whoosh). */
   swipe(dur = 0.4, x?: number) {
-    if (!ready() || !gate("swipe", 140)) return;
+    if (!ready() || !gate("air", 450)) return;
     const p = panFor(x), d = dur * R(0.85, 1.15), f = R(900, 1500);
     sweep(at(0.006), d, f, f * R(2.2, 3), R(2, 3.2), R(0.18, 0.26), p - 0.25, p + 0.25, 0.12, 0.3);
   },
   /** Caída suave al soltar algo en su lugar. */
   drop(x?: number) {
-    if (!ready() || !gate("drop", 90)) return;
+    if (!ready() || !gate("fx", 150)) return;
     const t = at(0.004), p = panFor(x);
     tone(t, R(150, 190), 60, 0.16, 0.26, "sine", p, 0.15);
     burst(t, 0.05, "lowpass", 1400, 0.7, 0.16, p);
   },
   /** Pluma sobre papel (firma). */
   scribble(dur = 0.8, x?: number) {
-    if (!ready() || !gate("scribble", 300)) return;
+    if (!ready() || !gate("air", 450)) return;
     const t0 = at(0.006), p = panFor(x), n = Math.round(dur / 0.07);
     for (let i = 0; i < n; i++) burst(t0 + i * 0.07 + R(0, 0.02), R(0.05, 0.09), "bandpass", R(3200, 6000), R(3, 6), R(0.06, 0.12), p, 0.05, 0.01);
   },
@@ -244,7 +254,7 @@ export const sfx = {
   },
   /** Campanita de "listo": dos notas pentatónicas con brillo y reverb. */
   chime(x?: number) {
-    if (!ready() || !gate("chime", 260)) return;
+    if (!ready() || !gate("fx", 420)) return;
     const t = at(0.008), p = panFor(x), i = Math.floor(R(0, NOTES.length - 3));
     [NOTES[i], NOTES[i + 2]].forEach((f, k) => {
       tone(t + k * 0.06, f, f, 0.9, 0.07, "sine", p, 0.6, 0.004);
@@ -260,14 +270,14 @@ export const sfx = {
   },
   /** Riser: tensión que sube mientras carga. */
   riser(dur = 1.1) {
-    if (!ready() || !gate("riser", 500)) return;
+    if (!ready() || !gate("air", 800)) return;
     const t = at(0.01);
     sweep(t, dur, 200, 4200, 1.4, 0.3, -0.4, 0.4, 0.4, 0.92);
     tone(t, 110, 220, dur, 0.05, "sawtooth", 0, 0.3, dur * 0.8);
   },
   /** Impacto final de la carga: sub-golpe + brillo, con cola de reverb. */
   impact() {
-    if (!ready() || !gate("impact", 600)) return;
+    if (!ready() || !gate("fx", 600)) return;
     const t = at(0.006);
     tone(t, 95, 32, 0.9, 0.6, "sine", 0, 0.35);
     burst(t, 0.35, "lowpass", 1800, 0.7, 0.35, 0, 0.5, 0.004);
@@ -275,7 +285,7 @@ export const sfx = {
   },
   /** Whoosh: aire que cruza de un lado al otro, cada uno distinto. */
   whoosh(dur = 0.5, vol = 0.5, rising = true) {
-    if (!ready() || !gate("whoosh", 200)) return;
+    if (!ready() || !gate("air", 450)) return;
     const d = dur * R(0.85, 1.2), lo = R(260, 450), hi = R(2000, 3400), dir = Math.random() < 0.5 ? -1 : 1;
     sweep(at(0.01), d, rising ? lo : hi, rising ? hi : lo, R(0.8, 1.4), vol * R(0.8, 1.05), -0.55 * dir, 0.55 * dir, 0.25);
   },

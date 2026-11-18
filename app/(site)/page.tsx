@@ -63,7 +63,7 @@ export default async function HomePage() {
 
   return (
     <>
-      <Loader name={site.name} />
+      <Loader />
       <Hero site={site} mediaUrl={mediaUrl(site.heroMediaPath)} reelHref={featured ? `/portafolio/${featured.slug}` : "/#showreel"} />
 
       <div className="marq" aria-hidden="true">
