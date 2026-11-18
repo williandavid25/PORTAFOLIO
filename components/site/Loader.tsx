@@ -4,7 +4,7 @@ import { useEffect, useRef, useState } from "react";
 import gsap from "gsap";
 import { markReady, splitChars } from "@/components/motion/MotionRoot";
 import { endCrewFlock, lowerCrew, startCrewFlock } from "@/components/motion/Crew";
-import { sfx } from "@/components/motion/sfx";
+import { sfx, unlockAudio } from "@/components/motion/sfx";
 
 /**
  * Pantalla de carga (solo la primera vez por sesión y solo en la portada).
@@ -27,19 +27,23 @@ export default function Loader({ name }: { name: string }) {
     try { sessionStorage.setItem("pf-loaded", "1"); } catch {}
     const layer = document.querySelector<HTMLElement>(".crew");
     if (layer) startCrewFlock(layer);
+    unlockAudio();
 
     const chars = splitChars(el.querySelector<HTMLElement>(".loader-name")!);
     const num = el.querySelector<HTMLElement>(".loader-count span")!;
     const o = { v: 0 };
     const tl = gsap.timeline({ onComplete: () => { lowerCrew(); setShow(false); } });
     tl.from(chars, { yPercent: 105, stagger: 0.045, duration: 0.75, ease: "expo.out" }, 0.05)
+      .call(() => sfx.riser(1.05), undefined, 0)
       .to(o, { v: 100, duration: 0.95, ease: "power2.inOut", onUpdate: () => { num.textContent = String(Math.round(o.v)); } }, 0)
       // Termina la carga: los punteros rompen la formación y van a construir la portada.
-      .add(() => { endCrewFlock(); sfx.whoosh(0.9, 0.6); })
+      .add(() => { endCrewFlock(); sfx.impact(); sfx.whoosh(0.9, 0.55); })
       .to(chars, { yPercent: -105, stagger: 0.025, duration: 0.35, ease: "expo.in" })
       .to(el.querySelectorAll(".loader-top,.loader-bot"), { opacity: 0, duration: 0.35 }, "<")
       .to(el, { clipPath: "inset(0 0 100% 0)", duration: 0.7, ease: "expo.inOut" }, "-=.12")
       .add(markReady, "-=.35");
+    // Cada letra suena al llegar a su lugar.
+    chars.forEach((_, i) => tl.call(() => sfx.land(), undefined, 0.05 + i * 0.045 + 0.14));
     return () => { tl.kill(); };
   }, []);
 

@@ -8,6 +8,7 @@ import Lenis from "lenis";
 import { Crew, destroyDirector, onScroll, showCrew } from "./Crew";
 import { splitChars, splitWords } from "./split";
 import SoundToggle from "./SoundToggle";
+import { cue, sfx } from "./sfx";
 
 gsap.registerPlugin(ScrollTrigger);
 export { splitChars, splitWords };
@@ -146,7 +147,9 @@ export default function MotionRoot({ children }: { children: ReactNode }) {
           if (kind === "stretch") crew.stretch(el, Number(el.dataset.radius ?? 22), st);
           // Tarjeta del portafolio: un puntero la estira y otro escribe su título.
           const title = isCard ? el.querySelector<HTMLElement>(".vcard-info h4") : null;
-          if (title) crew.type(title, onScroll(el, `top ${e0 + 2}%`, `top ${e0 - 12}%`));
+          const tt = title ? crew.type(title, onScroll(el, `top ${e0 + 2}%`, `top ${e0 - 12}%`)) : null;
+          // Tarjeta lista: campanita.
+          if (tt) cue(tt, () => sfx.chime(), tt.duration());
           else if (kind === "drag-left") crew.drag(el, "left", st);
           else if (kind === "drag-right") crew.drag(el, "right", st);
           else if (kind === "select") crew.select(el, st);

@@ -1,49 +1,23 @@
 "use client";
 
-import { useEffect, useState, useSyncExternalStore } from "react";
-import { isMuted, onMuteChange, setMuted, unlockAudio } from "./sfx";
+import { useEffect } from "react";
+import { isRunning, unlockAudio } from "./sfx";
 
 /**
- * Botón de sonido (esquina inferior izquierda). El audio se activa con el primer
- * toque, clic o tecla en cualquier parte (regla de los navegadores); aquí se puede
- * silenciar o volver a activar, y la elección se recuerda.
+ * Sonido automático (sin botón visible): se intenta activar al cargar la página.
+ * Si el navegador lo bloquea (regla de reproducción automática), se activa con el
+ * primer toque, clic o tecla en cualquier parte.
  */
 export default function SoundToggle() {
-  const muted = useSyncExternalStore(onMuteChange, isMuted, () => false);
-  const [live, setLive] = useState(false);
-
   useEffect(() => {
-    const first = (e: Event) => {
-      // Si el primer gesto es sobre este botón, lo maneja su onClick.
-      if ((e.target as Element | null)?.closest?.(".sound-toggle")) return;
-      if (!isMuted()) unlockAudio();
-      setLive(true);
-      window.removeEventListener("pointerdown", first, true);
-      window.removeEventListener("keydown", first, true);
-      window.removeEventListener("touchstart", first, true);
+    unlockAudio();
+    const evs = ["pointerdown", "keydown", "touchstart", "touchend", "mousedown"] as const;
+    const first = () => {
+      unlockAudio();
+      if (isRunning()) evs.forEach((e) => window.removeEventListener(e, first, true));
     };
-    window.addEventListener("pointerdown", first, true);
-    window.addEventListener("keydown", first, true);
-    window.addEventListener("touchstart", first, true);
-    return () => {
-      window.removeEventListener("pointerdown", first, true);
-      window.removeEventListener("keydown", first, true);
-      window.removeEventListener("touchstart", first, true);
-    };
+    evs.forEach((e) => window.addEventListener(e, first, true));
+    return () => evs.forEach((e) => window.removeEventListener(e, first, true));
   }, []);
-
-  const on = !muted && live;
-  return (
-    <button
-      type="button"
-      className={`sound-toggle${on ? " on" : ""}`}
-      aria-label={muted ? "Activar sonido" : "Silenciar sonido"}
-      aria-pressed={!muted}
-      title={muted ? "Activar sonido" : "Silenciar sonido"}
-      onClick={() => { if (!live) { setLive(true); setMuted(false); } else setMuted(!muted); }}
-    >
-      <span className="eq" aria-hidden="true"><i /><i /><i /><i /></span>
-      <span className="lbl">{muted ? "Sonido off" : live ? "Sonido" : "Activar sonido"}</span>
-    </button>
-  );
+  return null;
 }

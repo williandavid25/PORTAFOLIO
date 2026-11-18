@@ -69,6 +69,8 @@ export default function Hero({ site, mediaUrl }: Props) {
             .to(s, { opacity: 0, duration: 0.35 })
             .to(c, { y: "+=30", duration: 0.2 }, "<");
           cue(t, () => sfx.click(c.x), 0.25);
+          cue(t, () => sfx.swipe(0.7, c.x), 0.28);
+          cue(t, () => sfx.snap(c.x), 0.95);
         });
 
         // Foto: estira el marco hacia arriba mientras se revela.
@@ -84,6 +86,7 @@ export default function Hero({ site, mediaUrl }: Props) {
             .to(c, { x: "+=30", y: "-=20", duration: 0.2 }, 2);
           cue(t, () => sfx.click(c.x), 0.16);
           cue(t, () => sfx.whoosh(1.1, 0.4), 0.3);
+          cue(t, () => sfx.snap(c.x), 1.9);
         });
 
         // Etiqueta "Disponible": la arrastra desde la derecha.
@@ -99,7 +102,8 @@ export default function Hero({ site, mediaUrl }: Props) {
             .to(c, { scale: 1, duration: 0.05 }, 1)
             .to(c, { y: "+=30", duration: 0.2 }, 1.05);
           cue(t, () => sfx.click(c.x), 0.2);
-          cue(t, () => sfx.whoosh(0.6, 0.3), 0.26);
+          cue(t, () => sfx.swipe(0.7, c.x), 0.26);
+          cue(t, () => sfx.drop(c.x), 1);
         });
 
         /**
@@ -120,7 +124,8 @@ export default function Hero({ site, mediaUrl }: Props) {
               .to(c, { x: "+=30", y: "+=26", duration: 0.2 })
               .to(fr, { opacity: 0, duration: 0.3 }, 0.18 + STRETCH + typing);
             cue(t, () => sfx.click(c.x), 0.18);
-            cue(t, () => sfx.whoosh(0.45, 0.26), 0.2);
+            cue(t, () => sfx.swipe(0.45, c.x), 0.2);
+            cue(t, () => sfx.snap(c.x), 0.18 + STRETCH);
           });
           job(pos + 0.18 + STRETCH, (t) => {
             const c = crew.cursor(crew.next(), "escribiendo", true);
@@ -128,7 +133,7 @@ export default function Hero({ site, mediaUrl }: Props) {
             t.fromTo(c, { x: () => U(0).x - 24, y: () => U(0).y + U(0).h + 18 }, { x: () => U(0).x - 2, y: () => U(0).y + U(0).h * 0.5, duration: 0.15 });
             units.forEach((u, i) => {
               t.fromTo(u, { opacity: 0 }, { opacity: 1, duration: Math.max(0.02, per * 0.7) }, ">");
-              cue(t, () => sfx.key(c.x), "<");
+              cue(t, () => (u.textContent?.trim() ? sfx.key(c.x) : sfx.space(c.x)), "<");
               t.to(c, { x: () => U(i).x + U(i).w, y: () => U(i).y + U(i).h * 0.5, duration: per, ease: "none" }, "<");
             });
             t.to(c, { x: "+=26", y: "+=22", duration: 0.2 });
@@ -156,6 +161,8 @@ export default function Hero({ site, mediaUrl }: Props) {
             .to(c, { x: () => Bd().x + badge.offsetWidth, y: () => Bd().y + badge.offsetHeight, duration: 0.7, ease: "power2.inOut" }, 0.2)
             .to(c, { x: "+=24", y: "+=24", duration: 0.2 });
           cue(t, () => sfx.click(c.x), 0.2);
+          cue(t, () => sfx.swipe(0.7, c.x), 0.22);
+          cue(t, () => sfx.snap(c.x), 0.9);
         });
 
         // Botón "Contáctame": lo sube arrastrando.
@@ -171,7 +178,8 @@ export default function Hero({ site, mediaUrl }: Props) {
             .to(c, { scale: 1, duration: 0.05 }, 0.95)
             .to(c, { x: "+=30", y: "+=30", duration: 0.2 }, 1);
           cue(t, () => sfx.click(c.x), 0.2);
-          cue(t, () => sfx.whoosh(0.55, 0.3), 0.26);
+          cue(t, () => sfx.swipe(0.7, c.x), 0.26);
+          cue(t, () => sfx.drop(c.x), 0.95);
         });
 
         // ---- Más trabajos para que ningún puntero de la carga se quede sin hacer nada ----
@@ -187,6 +195,7 @@ export default function Hero({ site, mediaUrl }: Props) {
             .to(c, { scale: 1, duration: 0.08 }, "<")
             .to(c, { y: "+=26", duration: 0.2 });
           cue(t, () => sfx.click(c.x), 0.36);
+          if (create) cue(t, () => sfx.pop(c.x), 0.42);
         });
         const logo = document.querySelector<HTMLElement>("[data-nav] .logo");
         if (visible(logo)) tap(logo, 0.1);
@@ -213,6 +222,7 @@ export default function Hero({ site, mediaUrl }: Props) {
             .to(c, { scale: 1, duration: 0.1 }, "<")
             .to(c, { x: "+=40", y: "+=30", duration: 0.25 });
           cue(t, () => sfx.click(c.x), 0.5);
+          cue(t, () => sfx.chime(c.x), 0.62);
         });
       }
 
