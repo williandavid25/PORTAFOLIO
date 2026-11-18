@@ -124,11 +124,28 @@ export default function MotionRoot({ children }: { children: ReactNode }) {
         // Títulos en serif (ej. página de un proyecto).
         document.querySelectorAll<HTMLElement>("[data-split]").forEach((el) => crew.write(el, onScroll(el, "top 92%", "top 58%")));
 
-        document.querySelectorAll<HTMLElement>("[data-crew]").forEach((el, i) => {
+        // Uno por uno: en una misma fila, cada tarjeta empieza cuando la anterior va terminando.
+        const col = new Map<HTMLElement, number>();
+        const rows = new Map<string, HTMLElement[]>();
+        const all = Array.from(document.querySelectorAll<HTMLElement>("[data-crew]"));
+        const pIds = new Map<Element, number>();
+        all.forEach((el) => {
+          const p = el.parentElement!;
+          if (!pIds.has(p)) pIds.set(p, pIds.size);
+          const key = `${pIds.get(p)}:${Math.round(el.offsetTop / 8)}`;
+          const r = rows.get(key) ?? [];
+          col.set(el, r.length); r.push(el); rows.set(key, r);
+        });
+        all.forEach((el) => {
           const kind = el.dataset.crew;
-          const lag = (i % 3) * 4; // tarjetas de una misma fila: arrancan escalonadas
-          const st = onScroll(el, `top ${90 - lag}%`, `top ${45 - lag}%`);
+          const c = Math.min(col.get(el) ?? 0, 3);
+          const isCard = el.classList.contains("vcard");
+          const s0 = 92 - c * 11, e0 = (isCard ? 70 : 56) - c * 11;
+          const st = onScroll(el, `top ${s0}%`, `top ${e0}%`);
           if (kind === "stretch") crew.stretch(el, Number(el.dataset.radius ?? 22), st);
+          // Tarjeta del portafolio: un puntero la estira y otro escribe su título.
+          const title = isCard ? el.querySelector<HTMLElement>(".vcard-info h4") : null;
+          if (title) crew.type(title, onScroll(el, `top ${e0 + 2}%`, `top ${e0 - 12}%`));
           else if (kind === "drag-left") crew.drag(el, "left", st);
           else if (kind === "drag-right") crew.drag(el, "right", st);
           else if (kind === "select") crew.select(el, st);

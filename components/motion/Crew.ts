@@ -124,6 +124,8 @@ class Director {
   }
 
   private idle = false;
+  private vel = 0;
+  private lastY = 0;
   private tick = () => {
     if (!this.visible) return;
     if (this.flockOn) return this.flockTick(performance.now());
@@ -151,10 +153,53 @@ class Director {
       if (!cur || rank > cur.rank) best.set(t.agent, { t, rank });
     });
 
+    // ---- Escuadrón: los punteros que tienen trabajo más abajo bajan contigo ----
+    // Vuelan en V en el borde de la pantalla, se inclinan hacia donde desplazas y,
+    // cuando su parte llega a la vista, salen del grupo y van a construirla.
+    const sy = scrollY;
+    this.vel += (sy - this.lastY - this.vel) * 0.18;
+    this.lastY = sy;
+    const ahead = new Map<number, number>(); // puntero → distancia a su próximo trabajo
+    const rects = new Map<Element, number>();
+    this.tasks.forEach((t) => {
+      if (!t.el || t.tl.progress() > 0.0005) return;
+      let top = rects.get(t.el);
+      if (top === undefined) { top = t.el.getBoundingClientRect().top; rects.set(t.el, top); }
+      if (top < vh * 0.98) return;
+      const cur = ahead.get(t.agent);
+      if (cur === undefined || top < cur) ahead.set(t.agent, top);
+    });
+    const squad = new Map<number, number>();
+    Array.from(ahead.entries())
+      .filter(([i]) => { const b = best.get(i); return (!b || b.rank === 1) && !(this.circling(now) && this.pendingHero(i)); })
+      .sort((p, q) => p[1] - q[1])
+      .slice(0, vw < 640 ? 5 : 7)
+      .forEach(([i], k) => squad.set(i, k));
+    const lead = Math.max(-1, Math.min(1, this.vel / 14)); // −1 sube, +1 baja
+    const sx = vw - (vw < 640 ? 54 : 96), syq = vh * 0.8 + lead * 46;
+
     this.agents.forEach((a, i) => {
       const b = best.get(i);
       // Al salir de la bandada, cada puntero se endereza suavemente.
       if (!b && this.circling(now) && this.pendingHero(i)) { this.fly(a, i, now); return; }
+      const slot = squad.get(i);
+      if (slot !== undefined) {
+        const rank = Math.ceil(slot / 2), side = slot % 2 ? 1 : -1, ts = now / 1000;
+        const tx = sx + side * rank * (vw < 640 ? 14 : 20) + Math.sin(ts * 1.7 + i) * 3;
+        const ty = syq - rank * 18 * (lead < 0 ? -1 : 1) + Math.cos(ts * 2.1 + i) * 3;
+        if (a.op < 0.05) { a.x = tx; a.y = ty + 40; }
+        a.x += (tx - a.x) * 0.1;
+        a.y += (ty - a.y) * 0.1;
+        // Punta hacia abajo al bajar (−135°), hacia arriba al subir (45°), normal en reposo.
+        const rt = lead > 0 ? -135 * lead : 45 * -lead;
+        a.rot += (rt - a.rot) * 0.12;
+        a.op += (0.92 - a.op) * 0.1;
+        if (a.kind !== "arrow") { a.el.classList.remove(`k-${a.kind}`); a.kind = "arrow"; }
+        a.vx = 0; a.vy = 0;
+        a.el.style.opacity = a.op.toFixed(3);
+        a.el.style.transform = `translate3d(${a.x.toFixed(1)}px,${a.y.toFixed(1)}px,0) rotate(${a.rot.toFixed(1)}deg)`;
+        return;
+      }
       a.rot += (0 - a.rot) * 0.14;
       if (!b) {
         // Sale volando en la dirección que llevaba mientras se desvanece.
