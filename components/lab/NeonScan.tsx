@@ -4,7 +4,7 @@ import Link from "next/link";
 import { useEffect, useRef, useState } from "react";
 import type { FaceLandmarker, HandLandmarker, NormalizedLandmark } from "@mediapipe/tasks-vision";
 import { burst, heart } from "./shapes";
-import { labSfx, unlockAudio } from "@/components/motion/sfx";
+import { labAmbience, labSfx, unlockAudio } from "@/components/motion/sfx";
 
 /**
  * DevWilly Lab — escáner neón con la cámara.
@@ -209,6 +209,7 @@ export default function NeonScan() {
       cancelAnimationFrame(raf);
       stream?.getTracks().forEach((t) => t.stop());
       det.face?.close(); det.hands?.close();
+      labAmbience(false);
     };
     stopRef.current = stop;
     try {
@@ -280,7 +281,8 @@ export default function NeonScan() {
         phaseArr[i] = Math.random();
       }
       const shapeData: Record<number, Float32Array> = { 6: heart(N), 8: burst(N) };
-      let ringAt = -1e9, ringX = 0, ringY = 0, ringR = 60, ringC: RGB = [255, 255, 255];
+      let hadFace = false, hadHand = false, chargeAt = 0;
+      labAmbience(true);
       let beatAt = 0, lastCount = -2, boomAt = -1e9, boomX = 0, boomY = 0, boomR = 100;
       const heartHist: boolean[] = [];
       let heartAt: { x: number; y: number; r: number } | null = null;
@@ -307,7 +309,7 @@ export default function NeonScan() {
       let target: Pt[] | null = null, disp: Pt[] | null = null, rawZ: number[] = [], faceSeen = -1e9;
       let handPts: Pt[][] = [], handLm: NormalizedLandmark[][] = [];
       const prevTips = new Map<number, Pt>();
-      let lastVT = -1, turn = 0, detCost = 0, fingersState = -1;
+      let lastVT = -1, lastDet = 0, turn = 0, detCost = 0, fingersState = -1;
       let fpsT = performance.now(), fpsN = 0, fps = 0, hudT = 0, last = performance.now();
       let ax = 0, ay = 0, aR = 120, aInit = false;
 
@@ -343,6 +345,9 @@ export default function NeonScan() {
       };
       const detect = (now: number) => {
         if (video.readyState < 2 || video.currentTime === lastVT) return;
+        // Si detectar es caro (equipo sin tarjeta gráfica), se espacia: la animación conserva cuadros libres y fluye.
+        if (detCost > 16 && now - lastDet < Math.min(140, detCost * 1.6)) return;
+        lastDet = now;
         lastVT = video.currentTime;
         const t0 = performance.now();
         turn++;
@@ -399,10 +404,13 @@ export default function NeonScan() {
         // Color: 1–5 dedos (rostro), y colores propios de cada figura.
         if (shape === 0 && hand && fingersState >= 1 && fingersState !== lastCount) {
           labSfx.blip(fingersState);
-          // Anillo de luz del nuevo color desde la palma.
-          const Q = handPts[0];
-          if (Q) { ringAt = now; ringX = (Q[0].x + Q[9].x) / 2; ringY = (Q[0].y + Q[9].y) / 2; ringR = Math.hypot(Q[0].x - Q[9].x, Q[0].y - Q[9].y); ringC = PALETTE[Math.min(5, fingersState)]; }
         }
+        // Sonidos de contexto: rostro fijado, mano que entra, energía que se carga en el puño.
+        if (facePresent && !hadFace) labSfx.faceLock();
+        hadFace = facePresent;
+        if (hand && !hadHand) labSfx.handIn();
+        hadHand = hand;
+        if (shape === 8 && now - shapeAt > 650 && now >= chargeAt) { labSfx.charge(); chargeAt = now + 1500; }
         lastCount = hand ? fingersState : -2;
         if (shape === 6 && now >= beatAt) { labSfx.heartbeat(); beatAt = now + 1208; }
         const tc = shape === 6 ? HEART_RED : !hand || fingersState < 0 ? IDLE : PALETTE[Math.min(5, fingersState)];
@@ -626,14 +634,6 @@ export default function NeonScan() {
           const s = aR * (1.35 + 0.08 * Math.sin(t * 12));
           ctx.globalAlpha = Math.min(1, sinceShape / 400) * 0.95; ctx.drawImage(sprite, ax - s, ay - s, s * 2, s * 2); ctx.globalAlpha = 1;
         }
-        // Anillo de confirmación del cambio de color.
-        const rp = (now - ringAt) / 600;
-        if (rp >= 0 && rp < 1) {
-          const rr = ringR * (0.6 + rp * 1.8);
-          ctx.globalAlpha = 1 - rp;
-          neon(new Path2D(`M ${ringX + rr} ${ringY} A ${rr} ${rr} 0 1 0 ${ringX - rr} ${ringY} A ${rr} ${rr} 0 1 0 ${ringX + rr} ${ringY}`), ringC, 2.2, 18);
-          ctx.globalAlpha = 1;
-        }
         // ---- Manos: esqueleto neón + chispas ----
         handPts.forEach((Q, hi) => {
           const hp = new Path2D();
@@ -645,6 +645,7 @@ export default function NeonScan() {
             const p = Q[tip], key = hi * 100 + tip, pv = prevTips.get(key);
             ctx.drawImage(sprite, p.x - 9, p.y - 9, 18, 18);
             const mv = pv ? Math.hypot(p.x - pv.x, p.y - pv.y) : 0;
+            if (mv > 28 && tip === 8) labSfx.sparkle();
             const n = Math.min(4, 1 + Math.floor(mv / 8));
             for (let k = 0; k < n && sparks.length < MAX_SPARKS; k++) {
               const a = Math.random() * Math.PI * 2, s = 0.4 + Math.random() * 1.6;

@@ -415,7 +415,62 @@ export const labSfx = {
     tone(t, 0.18, { f, vol: 0.045, wet: 0.45, atk: 0.003 });
     tone(t, 0.08, { f: f * 3, vol: 0.012, wet: 0.45 });
   },
+  /** Rostro detectado: "chirp" de escáner (dos pitidos que suben + barrido de aire). */
+  faceLock() {
+    if (!ready() || !claim(3, 400)) return;
+    const t = at(0.006);
+    tone(t, 0.07, { f: 1318.5, vol: 0.035, wet: 0.35, atk: 0.003 });
+    tone(t + 0.09, 0.12, { f: 1975.5, vol: 0.03, wet: 0.45, atk: 0.003 });
+    noise(t, 0.35, { color: "pink", type: "bandpass", f: 900, f1: 5200, q: 2.5, vol: 0.05, atk: 0.12, wet: 0.3 });
+  },
+  /** La mano entra en cuadro: aire suave que sube. */
+  handIn() {
+    if (!ready() || !claim(2, 300)) return;
+    const t = at(0.006);
+    noise(t, 0.38, { color: "pink", type: "bandpass", f: 500, f1: 2600, q: 1.1, vol: 0.09, atk: 0.16, wet: 0.3, pan: R(-0.3, 0.3) });
+    tone(t + 0.12, 0.25, { f: 880, f1: 1320, vol: 0.012, wet: 0.5, atk: 0.05 });
+  },
+  /** Mantener el puño: la energía se carga (tono que sube con brillo). */
+  charge() {
+    if (!ready()) return;
+    const t = at(0.01);
+    tone(t, 1.3, { type: "triangle", f: 110, f1: 440, vol: 0.03, atk: 1.1, lp: 1600, wet: 0.35 });
+    noise(t, 1.3, { color: "pink", type: "bandpass", f: 300, f1: 3800, q: 2, vol: 0.05, atk: 1.15, wet: 0.35 });
+  },
+  /** Movimiento rápido de la mano: destello cristalino muy suave. */
+  sparkle() {
+    if (!ready()) return;
+    const v = bed("sparkle", 140);
+    if (!v) return;
+    const t = at(0.004), f = NOTES[3 + Math.floor(R(0, NOTES.length - 3))] * 2;
+    tone(t, 0.25, { f, vol: 0.014 * v, wet: 0.7, atk: 0.003, pan: R(-0.6, 0.6) });
+  },
 };
+
+/** Atmósfera de fondo del Lab: un colchón espacial muy suave (se enciende y apaga con fundido). */
+let amb: (() => void) | null = null;
+export function labAmbience(on: boolean) {
+  if (!S) return;
+  const { ac } = S;
+  if (on && !amb && ready()) {
+    const t = ac.currentTime, g = ac.createGain();
+    g.gain.setValueAtTime(0.0001, t);
+    g.gain.exponentialRampToValueAtTime(0.03, t + 2.5);
+    const f = ac.createBiquadFilter(); f.type = "lowpass"; f.frequency.value = 900; f.Q.value = 0.5;
+    const lfo = ac.createOscillator(), lg = ac.createGain();
+    lfo.frequency.value = 0.08; lg.gain.value = 350;
+    lfo.connect(lg).connect(f.frequency);
+    const oscs = [65.41, 98, 130.81, 196.5].map((fr, i) => { const o = ac.createOscillator(); o.type = i % 2 ? "triangle" : "sine"; o.frequency.value = fr; o.detune.value = (i - 1.5) * 6; o.connect(f); return o; });
+    const src = ac.createBufferSource(); src.buffer = S.pink; src.loop = true;
+    const nf = ac.createBiquadFilter(); nf.type = "bandpass"; nf.frequency.value = 2400; nf.Q.value = 0.8;
+    const ng = ac.createGain(); ng.gain.value = 0.08;
+    src.connect(nf).connect(ng).connect(g);
+    f.connect(g); g.connect(S.out);
+    const w = ac.createGain(); w.gain.value = 0.5; g.connect(w).connect(S.verb);
+    [...oscs, lfo].forEach((o) => o.start(t)); src.start(t);
+    amb = () => { const e = ac.currentTime; g.gain.cancelScheduledValues(e); g.gain.setValueAtTime(Math.max(0.0001, g.gain.value), e); g.gain.exponentialRampToValueAtTime(0.0001, e + 1); [...oscs, lfo].forEach((o) => o.stop(e + 1.05)); src.stop(e + 1.05); };
+  } else if (!on && amb) { amb(); amb = null; }
+}
 
 /** Para timelines ligados al scroll: el sonido solo se oye al avanzar (bajando), no al retroceder. */
 export function cue(tl: gsap.core.Timeline, play: () => void, pos?: gsap.Position) {
