@@ -769,3 +769,9 @@ textarea.fi { resize: vertical; min-height: 130px; }
 .lab-code-body .caret { display: inline-block; width: 2px; height: 1.15em; margin-left: 1px; transform: translateY(0.2em); background: var(--lab-c); box-shadow: 0 0 10px var(--lab-c); animation: labCaret 1s steps(1) infinite; }
 @keyframes labCaret { 50% { opacity: 0; } }
 @media (max-width: 900px) { .lab-code { top: auto; bottom: 64px; left: 12px; right: 12px; width: auto; height: 30vh; opacity: 0.6; } .lab-code-body { font-size: 10.5px; } .lab-code-body .ln b { flex-basis: 30px; padding-right: 8px; } }
+/* Persona recortada encima del código (mismo tratamiento que el video de fondo). */
+.lab-person { position: absolute; inset: 0; width: 100%; height: 100%; filter: brightness(0.5) saturate(0.75) contrast(1.06); }
+.lab.noseg .lab-code { opacity: 0.45; }
+/* Pantalla limpia: solo una flecha discreta para volver. */
+.lab > .lab-back { position: absolute; z-index: 5; top: 16px; left: 16px; width: 40px; height: 40px; padding: 0; display: grid; place-items: center; font-size: 16px; color: rgba(244, 241, 238, 0.75); }
+.lab-code { top: 72px; }
