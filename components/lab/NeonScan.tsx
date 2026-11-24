@@ -23,12 +23,12 @@ const HAND_MODEL = "https://storage.googleapis.com/mediapipe-models/hand_landmar
 type RGB = [number, number, number];
 /** Color por número de dedos (0 = puño … 5 = mano abierta). */
 const PALETTE: RGB[] = [
-  [255, 59, 62], // 0 rojo
-  [255, 77, 141], // 1 rosa
-  [255, 194, 61], // 2 dorado (loto)
-  [124, 92, 255], // 3 violeta (galaxia)
-  [255, 61, 120], // 4 carmesí (corazón)
-  [90, 170, 255], // 5 plasma (planeta en la palma)
+  [255, 50, 60], // 0 puño: rojo
+  [40, 210, 255], // 1 celeste
+  [60, 255, 120], // 2 verde
+  [255, 225, 40], // 3 amarillo
+  [150, 90, 255], // 4 violeta
+  [255, 50, 220], // 5 magenta
 ];
 const IDLE: RGB = [255, 106, 19]; // sin mano: naranja DevWilly
 /** Figuras: 0 rostro · 6 corazón (con las manos) · 8 bola de energía (puño; al abrir, estalla). */
@@ -104,10 +104,20 @@ function inside(p: Pt, poly: Pt[]) {
 
 /** Dedos levantados de una mano (21 puntos de MediaPipe). */
 function countFingers(h: NormalizedLandmark[]) {
-  const dist = (a: number, b: number) => Math.hypot(h[a].x - h[b].x, h[a].y - h[b].y, (h[a].z - h[b].z) * 0.5);
+  const d = (a: number, b: number) => Math.hypot(h[a].x - h[b].x, h[a].y - h[b].y, (h[a].z - h[b].z) * 0.6);
+  const size = d(0, 9) || 1e-6;
+  // ¿El dedo está recto? (las falanges apuntan hacia el mismo lado)
+  const straight = (m: number, p: number, t: number) => {
+    const ax = h[p].x - h[m].x, ay = h[p].y - h[m].y, bx = h[t].x - h[p].x, by = h[t].y - h[p].y;
+    return (ax * bx + ay * by) / (Math.hypot(ax, ay) * Math.hypot(bx, by) + 1e-9);
+  };
   let n = 0;
-  if (dist(4, 17) > dist(3, 17) * 1.08 && dist(4, 5) > dist(3, 5)) n++; // pulgar
-  for (const [tip, pip] of [[8, 6], [12, 10], [16, 14], [20, 18]]) if (dist(tip, 0) > dist(pip, 0) * 1.12) n++;
+  // Pulgar: separado del índice y alejado de la palma (si está doblado sobre la palma, no cuenta).
+  if (d(4, 5) / size > 0.5 && d(4, 17) > d(2, 17) * 1.12 && straight(2, 3, 4) > 0.4) n++;
+  // Índice, medio, anular y meñique: punta lejos de la muñeca y dedo recto.
+  for (const [m, p, t] of [[5, 6, 8], [9, 10, 12], [13, 14, 16], [17, 18, 20]]) {
+    if (d(t, 0) > d(p, 0) * 1.08 && straight(m, p, t) > 0.5) n++;
+  }
   return n;
 }
 
@@ -270,6 +280,7 @@ export default function NeonScan() {
         phaseArr[i] = Math.random();
       }
       const shapeData: Record<number, Float32Array> = { 6: heart(N), 8: burst(N) };
+      let ringAt = -1e9, ringX = 0, ringY = 0, ringR = 60, ringC: RGB = [255, 255, 255];
       let beatAt = 0, lastCount = -2, boomAt = -1e9, boomX = 0, boomY = 0, boomR = 100;
       const heartHist: boolean[] = [];
       let heartAt: { x: number; y: number; r: number } | null = null;
@@ -354,7 +365,7 @@ export default function NeonScan() {
 
         // ---- Dedos → forma y color ----
         const raw = handLm.length ? Math.max(...handLm.map(countFingers)) : -1;
-        hist.push(raw); if (hist.length > 7) hist.shift();
+        hist.push(raw); if (hist.length > 5) hist.shift();
         const freq = new Map<number, number>(); hist.forEach((v) => freq.set(v, (freq.get(v) ?? 0) + 1));
         fingersState = [...freq.entries()].sort((a, b) => b[1] - a[1])[0][0];
         // ¿Corazón con las manos? (estable durante varios cuadros)
@@ -384,7 +395,12 @@ export default function NeonScan() {
           if (shape === 6) { labSfx.warm(); beatAt = now + 450; }
         }
         // Color: 1–5 dedos (rostro), y colores propios de cada figura.
-        if (shape === 0 && hand && fingersState >= 1 && fingersState !== lastCount) labSfx.blip(fingersState);
+        if (shape === 0 && hand && fingersState >= 1 && fingersState !== lastCount) {
+          labSfx.blip(fingersState);
+          // Anillo de luz del nuevo color desde la palma.
+          const Q = handPts[0];
+          if (Q) { ringAt = now; ringX = (Q[0].x + Q[9].x) / 2; ringY = (Q[0].y + Q[9].y) / 2; ringR = Math.hypot(Q[0].x - Q[9].x, Q[0].y - Q[9].y); ringC = PALETTE[Math.min(5, fingersState)]; }
+        }
         lastCount = hand ? fingersState : -2;
         if (shape === 6 && now >= beatAt) { labSfx.heartbeat(); beatAt = now + 1208; }
         const tc = shape === 6 ? HEART_RED : !hand || fingersState < 0 ? IDLE : PALETTE[Math.min(5, fingersState)];
@@ -508,7 +524,12 @@ export default function NeonScan() {
         for (let i = 0; i < N; i++) {
           let X: number, Y: number, Z = 0;
           if (shape === 0) {
-            if (!gxs) { X = ax + Math.cos(i) * aR * 0.6; Y = ay + Math.sin(i * 1.7) * aR * 0.6; }
+            if (!gxs) {
+              // Sin rostro a la vista: una nube esférica suave que gira mientras lo busca.
+              const sp8 = shapeData[8], r0 = 0.85 * Math.cbrt(phaseArr[i]) * aR * 0.75, ang = t * 0.35;
+              const x0 = sp8[i * 3] * r0, z0 = sp8[i * 3 + 2] * r0;
+              X = ax + x0 * Math.cos(ang) + z0 * Math.sin(ang); Y = ay - sp8[i * 3 + 1] * r0; Z = (-x0 * Math.sin(ang) + z0 * Math.cos(ang)) / Math.max(40, aR);
+            }
             else {
               const a = ea[i], b = eb[i], k = et[i];
               X = gxs[a] + (gxs[b] - gxs[a]) * k; Y = gys![a] + (gys![b] - gys![a]) * k; Z = gzs![a];
@@ -601,6 +622,14 @@ export default function NeonScan() {
           // Núcleo y halo de la bola de energía.
           const s = aR * (1.35 + 0.08 * Math.sin(t * 12));
           ctx.globalAlpha = Math.min(1, sinceShape / 400) * 0.95; ctx.drawImage(sprite, ax - s, ay - s, s * 2, s * 2); ctx.globalAlpha = 1;
+        }
+        // Anillo de confirmación del cambio de color.
+        const rp = (now - ringAt) / 600;
+        if (rp >= 0 && rp < 1) {
+          const rr = ringR * (0.6 + rp * 1.8);
+          ctx.globalAlpha = 1 - rp;
+          neon(new Path2D(`M ${ringX + rr} ${ringY} A ${rr} ${rr} 0 1 0 ${ringX - rr} ${ringY} A ${rr} ${rr} 0 1 0 ${ringX + rr} ${ringY}`), ringC, 2.2, 18);
+          ctx.globalAlpha = 1;
         }
         // ---- Manos: esqueleto neón + chispas ----
         handPts.forEach((Q, hi) => {
