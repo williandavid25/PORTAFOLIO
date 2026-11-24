@@ -204,8 +204,8 @@ class Director {
         a.el.style.transform = `translate3d(${a.x.toFixed(1)}px,${a.y.toFixed(1)}px,0) rotate(${a.rot.toFixed(1)}deg)`;
         return;
       }
-      a.rot += (0 - a.rot) * 0.14;
       if (!b) {
+        a.rot += (0 - a.rot) * 0.14;
         // Sale volando en la dirección que llevaba mientras se desvanece.
         if (a.vx || a.vy) { a.x += a.vx * 1.6; a.y += a.vy * 1.6; a.vx *= 0.97; a.vy *= 0.97; }
         a.op += (0 - a.op) * 0.12;
@@ -216,10 +216,16 @@ class Director {
       const p = b.t.probe;
       const tx = Math.min(vw - 26, Math.max(2, p.x + lr.left));
       const ty = Math.min(vh - 26, Math.max(2, p.y + lr.top));
-      if (a.op < 0.05) { a.x = tx; a.y = ty; } // aparece en su sitio, no cruza la pantalla
-      const k = b.rank === 3 ? 0.35 : 0.12;
-      a.x += (tx - a.x) * k;
-      a.y += (ty - a.y) * k;
+      if (a.op < 0.05) { a.x = tx; a.y = ty; a.vx = 0; a.vy = 0; } // aparece en su sitio, no cruza la pantalla
+      // Resorte: acelera y frena con suavidad (trabajando: firme; llegando: planea).
+      const st = b.rank === 3 ? 0.45 : 0.1, dmp = b.rank === 3 ? 0.5 : 0.75;
+      a.vx = (a.vx + (tx - a.x) * st) * dmp;
+      a.vy = (a.vy + (ty - a.y) * st) * dmp;
+      a.x += a.vx;
+      a.y += a.vy;
+      // Se inclina hacia donde se mueve, como una mano real.
+      const lean = Math.max(-14, Math.min(14, a.vx * 1.2));
+      a.rot += (lean - a.rot) * 0.2;
       const target = b.rank === 1 ? Math.max(0, 1 - (now - b.t.doneAt) / 900) : 1;
       a.op += (target - a.op) * 0.15;
       a.el.style.opacity = a.op.toFixed(3);
@@ -399,8 +405,8 @@ export class Crew {
       .to(c, { x: () => this.cx(B().x + B().w), y: () => B().y + B().h, duration: 0.6, ease: "power2.inOut" }, "<")
       .to(f, { opacity: 0, duration: 0.15 })
       .to(c, { x: "+=30", y: "+=20", duration: 0.15 }, "<");
-    cue(tl, () => sfx.click(c.x), 0.25);
-    cue(tl, () => sfx.swipe(0.6, c.x), 0.33);
+    cue(tl, () => sfx.press(c.x), 0.25);
+    cue(tl, () => sfx.stretch(0.6, c.x), 0.33);
     cue(tl, () => sfx.snap(c.x), 0.93);
     return tl;
   }
@@ -420,7 +426,7 @@ export class Crew {
       .to(c, { x: () => this.cx(B().x + gx()), y: () => B().y + 26, duration: 0.6, ease: "power2.out" }, "<")
       .to(c, { scale: 1, duration: 0.06 })
       .to(c, { y: "+=24", duration: 0.15 });
-    cue(tl, () => sfx.click(c.x), 0.22);
+    cue(tl, () => sfx.press(c.x), 0.22);
     cue(tl, () => sfx.swipe(0.6, c.x), 0.3);
     cue(tl, () => sfx.drop(c.x), 0.88);
     return tl;
@@ -437,8 +443,8 @@ export class Crew {
       .fromTo(bar, { width: "0%" }, { width: `${level}%`, duration: 0.6, ease: "none" })
       .to(c, { x: () => this.cx(B().x + (B().w * level) / 100), duration: 0.6, ease: "none" }, "<")
       .to(c, { y: "+=20", duration: 0.1 });
-    cue(tl, () => sfx.click(c.x), 0.2);
-    cue(tl, () => sfx.swipe(0.6, c.x), 0.22);
+    cue(tl, () => sfx.press(c.x), 0.2);
+    cue(tl, () => sfx.stretch(0.6, c.x), 0.22);
     cue(tl, () => sfx.snap(c.x), 0.8);
     return tl;
   }
@@ -472,8 +478,8 @@ export class Crew {
       .fromTo(line, { scaleX: 0 }, { scaleX: 1, duration: 1, ease: "none", transformOrigin: "left center" })
       .to(c, { x: () => this.cx(B().x + B().w), duration: 1, ease: "none" }, "<")
       .to(c, { y: "+=24", duration: 0.1 });
-    cue(tl, () => sfx.whoosh(0.9, 0.3), 0.15);
-    cue(tl, () => sfx.chime(c.x), 1.15);
+    cue(tl, () => sfx.whoosh(1, 0.32), 0.15);
+    cue(tl, () => sfx.snap(c.x), 1.15);
     return tl;
   }
 
@@ -492,7 +498,7 @@ export class Crew {
       .to(s, { opacity: 0, duration: 0.3 }, "<0.1")
       .to(c, { x: "+=24", y: "+=20", duration: 0.2 }, "<");
     cue(tl, () => sfx.click(c.x), 0.2);
-    cue(tl, () => sfx.swipe(0.5, c.x), 0.22);
+    cue(tl, () => sfx.select(0.5, c.x), 0.22);
     cue(tl, () => sfx.pop(c.x), 0.72);
     return tl;
   }

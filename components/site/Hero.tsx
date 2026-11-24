@@ -69,8 +69,7 @@ export default function Hero({ site, mediaUrl }: Props) {
             .to(s, { opacity: 0, duration: 0.35 })
             .to(c, { y: "+=30", duration: 0.2 }, "<");
           cue(t, () => sfx.click(c.x), 0.25);
-          cue(t, () => sfx.swipe(0.7, c.x), 0.28);
-          cue(t, () => sfx.snap(c.x), 0.95);
+          cue(t, () => sfx.select(0.7, c.x), 0.28);
         });
 
         // Foto: estira el marco hacia arriba mientras se revela.
@@ -84,8 +83,8 @@ export default function Hero({ site, mediaUrl }: Props) {
             .to(c, { y: () => M().y, duration: 1.8, ease: "expo.inOut" }, 0.15)
             .to(fr, { opacity: 0, duration: 0.35 }, 2)
             .to(c, { x: "+=30", y: "-=20", duration: 0.2 }, 2);
-          cue(t, () => sfx.click(c.x), 0.16);
-          cue(t, () => sfx.whoosh(1.1, 0.4), 0.3);
+          cue(t, () => sfx.press(c.x), 0.16);
+          cue(t, () => sfx.whoosh(1.2, 0.45), 0.3);
           cue(t, () => sfx.snap(c.x), 1.9);
         });
 
@@ -101,7 +100,7 @@ export default function Hero({ site, mediaUrl }: Props) {
             .to(c, { x: () => C().x + C().w - 26, duration: 0.75 }, 0.25)
             .to(c, { scale: 1, duration: 0.05 }, 1)
             .to(c, { y: "+=30", duration: 0.2 }, 1.05);
-          cue(t, () => sfx.click(c.x), 0.2);
+          cue(t, () => sfx.press(c.x), 0.2);
           cue(t, () => sfx.swipe(0.7, c.x), 0.26);
           cue(t, () => sfx.drop(c.x), 1);
         });
@@ -123,8 +122,8 @@ export default function Hero({ site, mediaUrl }: Props) {
               .to(c, { x: () => B().x + B().w + 6, y: () => B().y + B().h + 6, duration: STRETCH, ease: "power2.inOut" }, "<")
               .to(c, { x: "+=30", y: "+=26", duration: 0.2 })
               .to(fr, { opacity: 0, duration: 0.3 }, 0.18 + STRETCH + typing);
-            cue(t, () => sfx.click(c.x), 0.18);
-            cue(t, () => sfx.swipe(0.45, c.x), 0.2);
+            cue(t, () => sfx.press(c.x), 0.18);
+            cue(t, () => sfx.stretch(0.45, c.x), 0.2);
             cue(t, () => sfx.snap(c.x), 0.18 + STRETCH);
           });
           job(pos + 0.18 + STRETCH, (t) => {
@@ -160,8 +159,8 @@ export default function Hero({ site, mediaUrl }: Props) {
             .to(badge, { scale: 1, duration: 0.7, ease: "power2.inOut" }, 0.2)
             .to(c, { x: () => Bd().x + badge.offsetWidth, y: () => Bd().y + badge.offsetHeight, duration: 0.7, ease: "power2.inOut" }, 0.2)
             .to(c, { x: "+=24", y: "+=24", duration: 0.2 });
-          cue(t, () => sfx.click(c.x), 0.2);
-          cue(t, () => sfx.swipe(0.7, c.x), 0.22);
+          cue(t, () => sfx.press(c.x), 0.2);
+          cue(t, () => sfx.stretch(0.7, c.x), 0.22);
           cue(t, () => sfx.snap(c.x), 0.9);
         });
 
@@ -177,7 +176,7 @@ export default function Hero({ site, mediaUrl }: Props) {
             .to(c, { y: () => Bo().y + Bo().h / 2, duration: 0.7 }, 0.25)
             .to(c, { scale: 1, duration: 0.05 }, 0.95)
             .to(c, { x: "+=30", y: "+=30", duration: 0.2 }, 1);
-          cue(t, () => sfx.click(c.x), 0.2);
+          cue(t, () => sfx.press(c.x), 0.2);
           cue(t, () => sfx.swipe(0.7, c.x), 0.26);
           cue(t, () => sfx.drop(c.x), 0.95);
         });
@@ -194,8 +193,7 @@ export default function Hero({ site, mediaUrl }: Props) {
             .fromTo(r, { x: () => E().x + E().w / 2, y: () => E().y + E().h / 2, scale: 0.2, opacity: 0.8 }, { scale: 1.3, opacity: 0, duration: 0.45, immediateRender: false })
             .to(c, { scale: 1, duration: 0.08 }, "<")
             .to(c, { y: "+=26", duration: 0.2 });
-          cue(t, () => sfx.click(c.x), 0.36);
-          if (create) cue(t, () => sfx.pop(c.x), 0.42);
+          cue(t, () => (create ? sfx.pop(c.x) : sfx.click(c.x)), 0.38);
         });
         const logo = document.querySelector<HTMLElement>("[data-nav] .logo");
         if (visible(logo)) tap(logo, 0.1);

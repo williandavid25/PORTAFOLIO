@@ -16,11 +16,11 @@ export const revalidate = 60;
 
 const SERVICES = [
   { icon: "film", title: "Edición para Redes Sociales", text: "Reels, TikToks y Shorts diseñados para detener el scroll y maximizar el engagement de tu audiencia." },
+  { icon: "home", title: "Videos Inmobiliarios", text: "Edición en CapCut para asesores inmobiliarios: recorridos de propiedades, reels de captación y anuncios con precio, ubicación, subtítulos dinámicos y música que venden." },
   { icon: "video", title: "Producción Publicitaria", text: "Videos comerciales de alto impacto para campañas digitales que convierten espectadores en clientes." },
   { icon: "monitor", title: "Video Corporativo", text: "Presentaciones institucionales, videos de marca y testimonios que fortalecen la identidad de tu empresa." },
   { icon: "playc", title: "YouTube & Streaming", text: "Edición profesional para creadores: intros, outros, thumbnails animados y motion graphics personalizados." },
-  { icon: "pen", title: "Color Grading", text: "Corrección y gradación de color profesional con estética cinematográfica." },
-  { icon: "pulse", title: "Motion Graphics", text: "Animaciones tipográficas, intros dinámicas y gráficos en movimiento que elevan tu contenido." },
+  { icon: "pulse", title: "Color & Motion Graphics", text: "Gradación de color cinematográfica, animaciones tipográficas e intros dinámicas que elevan tu contenido." },
   { icon: "code", title: "Desarrollo Web", text: "Páginas web sencillas y landing pages con HTML, CSS y JavaScript, trabajadas en Visual Studio Code y versionadas en GitHub." },
   { icon: "users", title: "Community Management", text: "Gestiono tus redes: calendario de contenido, publicaciones, respuesta a la comunidad y reporte de resultados." },
 ];
@@ -37,7 +37,7 @@ const STEPS = [
 const PILLARS = [
   {
     icon: "film", title: "Editor de video", lead: "Mi especialidad. Videos con ritmo, color y sonido cuidados para cada plataforma.",
-    points: ["Reels, TikToks y Shorts", "Publicidad y video corporativo", "Color grading y motion graphics", "Formatos listos para cada red"],
+    points: ["Reels, TikToks y Shorts", "Videos inmobiliarios en CapCut", "Publicidad y video corporativo", "Color grading y motion graphics", "Formatos listos para cada red"],
   },
   {
     icon: "code", title: "Programación web", lead: "Nivel básico, enfocado en resultados prácticos para mis clientes y proyectos.",
@@ -49,7 +49,7 @@ const PILLARS = [
   },
 ];
 
-const MARQUEE = ["Edición de video", "Desarrollo web", "Community Manager", "Reels", "Motion Graphics", "Color Grading"];
+const MARQUEE = ["Edición de video", "Videos inmobiliarios", "CapCut", "Desarrollo web", "Community Manager", "Reels", "Motion Graphics", "Color Grading"];
 
 export default async function HomePage() {
   const [site, projects, testimonials] = await Promise.all([getSite(), getProjects(), getTestimonials()]);
