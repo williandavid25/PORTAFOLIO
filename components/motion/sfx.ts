@@ -371,62 +371,57 @@ export const sfx = {
 // ================================================================ Lab (cámara)
 /** Sonidos del Lab: cada gesto tiene el suyo. */
 export const labSfx = {
-  /** Puño: las partículas se comprimen (succión que baja de tono + golpe sordo). */
+  /** Puño: pozo de gravedad — tensión que sube y se cierra en un golpe profundo con brillo. */
   implode() {
-    if (!ready() || !claim(5, 600)) return;
+    if (!ready() || !claim(5, 650)) return;
     const t = at(0.006);
-    noise(t, 0.5, { color: "pink", type: "bandpass", f: 3200, f1: 180, q: 1.4, vol: 0.32, atk: 0.35, wet: 0.25 });
-    tone(t + 0.42, 0.32, { f: 140, f1: 42, vol: 0.5, wet: 0.2 });
-    noise(t + 0.42, 0.06, { color: "pink", type: "lowpass", f: 800, q: 0.7, vol: 0.18 });
+    tone(t, 0.42, { f: 90, f1: 360, vol: 0.07, atk: 0.38, wet: 0.3 });
+    noise(t, 0.42, { color: "pink", type: "bandpass", f: 4200, f1: 260, q: 1.2, vol: 0.22, atk: 0.36, wet: 0.3 });
+    tone(t + 0.4, 0.55, { f: 120, f1: 38, vol: 0.55, wet: 0.25 });
+    noise(t + 0.4, 0.08, { color: "pink", type: "lowpass", f: 900, q: 0.7, vol: 0.2 });
+    tone(t + 0.42, 0.7, { f: 1567.98, vol: 0.018, wet: 0.7, atk: 0.01 });
   },
-  /** Abrir la mano: estallido (sub + cuerpo + chispa + aire). */
+  /** Abrir la mano: estallido con golpe, cuerpo, aire y escombros repartidos en estéreo. */
   blast() {
-    if (!ready() || !claim(5, 800)) return;
+    if (!ready() || !claim(5, 900)) return;
     const t = at(0.006);
-    tone(t, 1, { f: 96, f1: 30, vol: 0.6, wet: 0.35 });
-    noise(t, 0.45, { color: "pink", type: "lowpass", f: 2400, f1: 260, q: 0.7, vol: 0.34, atk: 0.003, wet: 0.5 });
-    noise(t, 0.1, { type: "highpass", f: 5200, q: 0.7, vol: 0.12, wet: 0.5 });
-    noise(t + 0.05, 0.8, { color: "pink", type: "bandpass", f: 600, f1: 3200, q: 0.9, vol: 0.16, atk: 0.2, wet: 0.4 });
+    noise(t, 0.012, { type: "highpass", f: 3000, q: 0.7, vol: 0.4 });
+    tone(t, 1.1, { f: 98, f1: 28, vol: 0.62, wet: 0.35 });
+    noise(t, 0.5, { color: "pink", type: "lowpass", f: 2600, f1: 240, q: 0.7, vol: 0.32, atk: 0.003, wet: 0.5 });
+    noise(t + 0.03, 0.9, { color: "pink", type: "bandpass", f: 500, f1: 3600, q: 0.8, vol: 0.14, atk: 0.25, wet: 0.45 });
+    for (let k = 0; k < 7; k++) noise(t + 0.05 + R(0, 0.35), R(0.02, 0.05), { type: "bandpass", f: R(2500, 7000), q: R(2, 5), vol: R(0.04, 0.08), pan: R(-0.9, 0.9), wet: 0.3 });
   },
-  /** Chispa eléctrica corta (rayos de la bola de plasma). */
+  /** Chispa eléctrica nítida (tres micro descargas). */
   zap() {
     if (!ready()) return;
-    const v = bed("zap", 90);
+    const v = bed("zap", 110);
     if (!v) return;
-    const t = at(0.003), p = R(-0.4, 0.4);
-    noise(t, R(0.025, 0.05), { type: "bandpass", f: R(2200, 5200), q: R(3, 7), vol: 0.09 * v, pan: p, wet: 0.15 });
-    tone(t, 0.02, { type: "square", f: R(1200, 2600), f1: R(500, 900), vol: 0.025 * v, pan: p });
+    const t = at(0.003), p = R(-0.5, 0.5);
+    for (let k = 0; k < 3; k++) noise(t + k * R(0.008, 0.016), R(0.006, 0.014), { type: "bandpass", f: R(3000, 7500), q: R(4, 9), vol: R(0.05, 0.09) * v, pan: p, wet: 0.12 });
   },
-  /** Rosa: arpegio mágico ascendente (campanas FM) con cola de sala. */
-  shimmer() {
-    if (!ready() || !claim(4, 700)) return;
-    const { ac } = S!;
-    const t = at(0.008), base = Math.floor(R(0, 3));
-    for (let k = 0; k < 5; k++) {
-      const f = NOTES[Math.min(NOTES.length - 1, base + k)], tt = t + k * 0.07;
-      const car = ac.createOscillator(), mod = ac.createOscillator(), mg = ac.createGain(), g = ac.createGain();
-      car.frequency.value = f; mod.frequency.value = f * 2.01;
-      mg.gain.setValueAtTime(f * 0.9, tt); mg.gain.exponentialRampToValueAtTime(f * 0.02, tt + 0.5);
-      mod.connect(mg).connect(car.frequency);
-      env(g.gain, tt, 0.05, 0.004, 1.2);
-      route(car.connect(g), (k - 2) * 0.15, 0.6);
-      car.start(tt); mod.start(tt); car.stop(tt + 1.25); mod.stop(tt + 1.25);
+  /** Corazón: acorde cálido (pad suave) al formarse. */
+  warm() {
+    if (!ready() || !claim(4, 900)) return;
+    const t = at(0.01);
+    for (const [f, d] of [[261.63, 0], [329.63, 0.04], [392, 0.08], [523.25, 0.12]] as [number, number][]) {
+      tone(t + d, 1.6, { f, vol: 0.035, atk: 0.35, wet: 0.6, lp: 1800 });
+      tone(t + d, 1.6, { type: "triangle", f: f * 1.003, vol: 0.012, atk: 0.4, wet: 0.6, lp: 1400 });
     }
   },
-  /** Latido (lub-dub) para el corazón. */
+  /** Latido (lub-dub) profundo. */
   heartbeat() {
     if (!ready()) return;
     const t = at(0.004);
-    tone(t, 0.14, { f: 72, f1: 44, vol: 0.55, wet: 0.12 });
-    noise(t, 0.05, { color: "pink", type: "lowpass", f: 300, q: 0.7, vol: 0.2 });
-    tone(t + 0.19, 0.16, { f: 62, f1: 40, vol: 0.42, wet: 0.12 });
+    tone(t, 0.15, { f: 68, f1: 42, vol: 0.6, wet: 0.12 });
+    noise(t, 0.05, { color: "pink", type: "lowpass", f: 260, q: 0.7, vol: 0.22 });
+    tone(t + 0.2, 0.17, { f: 58, f1: 38, vol: 0.46, wet: 0.12 });
   },
-  /** Cambio de color (1–5 dedos): un "blip" cuyo tono sube con los dedos. */
+  /** Cambio de color (1–5 dedos): tic de cristal cuyo tono sube con los dedos. */
   blip(n: number) {
     if (!ready() || !claim(2, 120)) return;
-    const t = at(0.004), f = 440 * Math.pow(2, Math.max(0, n) / 5);
-    tone(t, 0.09, { f, f1: f * 1.02, vol: 0.06, wet: 0.3 });
-    tone(t, 0.06, { f: f * 2, vol: 0.02, wet: 0.3 });
+    const t = at(0.004), f = NOTES[Math.min(NOTES.length - 1, Math.max(0, n) + 1)];
+    tone(t, 0.18, { f, vol: 0.045, wet: 0.45, atk: 0.003 });
+    tone(t, 0.08, { f: f * 3, vol: 0.012, wet: 0.45 });
   },
 };
 
@@ -439,17 +434,21 @@ export function plasmaHum(on: boolean) {
   if (on && !hum && ready()) {
     const g = ac.createGain();
     g.gain.setValueAtTime(0.0001, t);
-    g.gain.exponentialRampToValueAtTime(0.05, t + 0.5);
-    const f = ac.createBiquadFilter(); f.type = "lowpass"; f.frequency.value = 700; f.Q.value = 4;
+    g.gain.exponentialRampToValueAtTime(0.06, t + 0.6);
+    const am = ac.createGain(); am.gain.value = 0.7;
     const lfo = ac.createOscillator(), lg = ac.createGain();
-    lfo.frequency.value = 5.5; lg.gain.value = 320;
-    lfo.connect(lg).connect(f.frequency);
+    lfo.frequency.value = 3.2; lg.gain.value = 0.3;
+    lfo.connect(lg).connect(am.gain);
     const o1 = ac.createOscillator(), o2 = ac.createOscillator();
-    o1.type = "sawtooth"; o1.frequency.value = 55; o2.type = "sawtooth"; o2.frequency.value = 110.6;
-    o1.connect(f); o2.connect(f);
-    f.connect(g).connect(S.out);
-    [o1, o2, lfo].forEach((o) => o.start(t));
-    hum = { g, stop: () => { const e = ac.currentTime; g.gain.cancelScheduledValues(e); g.gain.setValueAtTime(Math.max(0.0001, g.gain.value), e); g.gain.exponentialRampToValueAtTime(0.0001, e + 0.4); [o1, o2, lfo].forEach((o) => o.stop(e + 0.45)); } };
+    o1.type = "sine"; o1.frequency.value = 92; o2.type = "sine"; o2.frequency.value = 138.4;
+    const src = ac.createBufferSource(); src.buffer = S.pink; src.loop = true;
+    const f = ac.createBiquadFilter(); f.type = "bandpass"; f.frequency.value = 1800; f.Q.value = 1.4;
+    const ng = ac.createGain(); ng.gain.value = 0.35;
+    o1.connect(am); o2.connect(am); src.connect(f).connect(ng).connect(am);
+    am.connect(g).connect(S.out);
+    const w = ac.createGain(); w.gain.value = 0.3; g.connect(w).connect(S.verb);
+    [o1, o2, lfo].forEach((o) => o.start(t)); src.start(t);
+    hum = { g, stop: () => { const e = ac.currentTime; g.gain.cancelScheduledValues(e); g.gain.setValueAtTime(Math.max(0.0001, g.gain.value), e); g.gain.exponentialRampToValueAtTime(0.0001, e + 0.45); [o1, o2, lfo].forEach((o) => o.stop(e + 0.5)); src.stop(e + 0.5); } };
   } else if (!on && hum) {
     hum.stop();
     hum = null;
