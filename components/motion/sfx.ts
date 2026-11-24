@@ -391,14 +391,6 @@ export const labSfx = {
     noise(t + 0.03, 0.9, { color: "pink", type: "bandpass", f: 500, f1: 3600, q: 0.8, vol: 0.14, atk: 0.25, wet: 0.45 });
     for (let k = 0; k < 7; k++) noise(t + 0.05 + R(0, 0.35), R(0.02, 0.05), { type: "bandpass", f: R(2500, 7000), q: R(2, 5), vol: R(0.04, 0.08), pan: R(-0.9, 0.9), wet: 0.3 });
   },
-  /** Chispa eléctrica nítida (tres micro descargas). */
-  zap() {
-    if (!ready()) return;
-    const v = bed("zap", 110);
-    if (!v) return;
-    const t = at(0.003), p = R(-0.5, 0.5);
-    for (let k = 0; k < 3; k++) noise(t + k * R(0.008, 0.016), R(0.006, 0.014), { type: "bandpass", f: R(3000, 7500), q: R(4, 9), vol: R(0.05, 0.09) * v, pan: p, wet: 0.12 });
-  },
   /** Corazón: acorde cálido (pad suave) al formarse. */
   warm() {
     if (!ready() || !claim(4, 900)) return;
@@ -424,36 +416,6 @@ export const labSfx = {
     tone(t, 0.08, { f: f * 3, vol: 0.012, wet: 0.45 });
   },
 };
-
-/** Zumbido continuo de la bola de plasma (se enciende y apaga con fundido). */
-let hum: { g: GainNode; stop: () => void } | null = null;
-export function plasmaHum(on: boolean) {
-  if (!S) return;
-  const { ac } = S;
-  const t = ac.currentTime;
-  if (on && !hum && ready()) {
-    const g = ac.createGain();
-    g.gain.setValueAtTime(0.0001, t);
-    g.gain.exponentialRampToValueAtTime(0.06, t + 0.6);
-    const am = ac.createGain(); am.gain.value = 0.7;
-    const lfo = ac.createOscillator(), lg = ac.createGain();
-    lfo.frequency.value = 3.2; lg.gain.value = 0.3;
-    lfo.connect(lg).connect(am.gain);
-    const o1 = ac.createOscillator(), o2 = ac.createOscillator();
-    o1.type = "sine"; o1.frequency.value = 92; o2.type = "sine"; o2.frequency.value = 138.4;
-    const src = ac.createBufferSource(); src.buffer = S.pink; src.loop = true;
-    const f = ac.createBiquadFilter(); f.type = "bandpass"; f.frequency.value = 1800; f.Q.value = 1.4;
-    const ng = ac.createGain(); ng.gain.value = 0.35;
-    o1.connect(am); o2.connect(am); src.connect(f).connect(ng).connect(am);
-    am.connect(g).connect(S.out);
-    const w = ac.createGain(); w.gain.value = 0.3; g.connect(w).connect(S.verb);
-    [o1, o2, lfo].forEach((o) => o.start(t)); src.start(t);
-    hum = { g, stop: () => { const e = ac.currentTime; g.gain.cancelScheduledValues(e); g.gain.setValueAtTime(Math.max(0.0001, g.gain.value), e); g.gain.exponentialRampToValueAtTime(0.0001, e + 0.45); [o1, o2, lfo].forEach((o) => o.stop(e + 0.5)); src.stop(e + 0.5); } };
-  } else if (!on && hum) {
-    hum.stop();
-    hum = null;
-  }
-}
 
 /** Para timelines ligados al scroll: el sonido solo se oye al avanzar (bajando), no al retroceder. */
 export function cue(tl: gsap.core.Timeline, play: () => void, pos?: gsap.Position) {

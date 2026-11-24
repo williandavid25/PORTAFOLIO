@@ -3,8 +3,8 @@
 import Link from "next/link";
 import { useEffect, useRef, useState } from "react";
 import type { FaceLandmarker, HandLandmarker, NormalizedLandmark } from "@mediapipe/tasks-vision";
-import { burst, heart, planet } from "./shapes";
-import { labSfx, plasmaHum, unlockAudio } from "@/components/motion/sfx";
+import { burst, heart } from "./shapes";
+import { labSfx, unlockAudio } from "@/components/motion/sfx";
 
 /**
  * DevWilly Lab — escáner neón con la cámara.
@@ -31,9 +31,21 @@ const PALETTE: RGB[] = [
   [90, 170, 255], // 5 plasma (planeta en la palma)
 ];
 const IDLE: RGB = [255, 106, 19]; // sin mano: naranja DevWilly
-/** Figuras: 0 rostro · 5 bola de plasma (palma abierta) · 6 corazón (con las manos) · 8 bola de energía (puño). */
-const SHAPES: Record<number, string> = { 0: "rostro", 5: "bola de plasma", 6: "corazón", 8: "bola de energía" };
-const PLASMA: RGB = [110, 185, 255];
+/** Figuras: 0 rostro · 6 corazón (con las manos) · 8 bola de energía (puño; al abrir, estalla). */
+const SHAPES: Record<number, string> = { 0: "rostro", 6: "corazón", 8: "bola de energía" };
+
+/** Rota el tono de un color (matriz de hue-rotate de CSS): da variedad sin salir de la familia. */
+function hueRotate(c: RGB, deg: number): RGB {
+  const a = (deg * Math.PI) / 180, co = Math.cos(a), si = Math.sin(a);
+  const m = [
+    0.213 + co * 0.787 - si * 0.213, 0.715 - co * 0.715 - si * 0.715, 0.072 - co * 0.072 + si * 0.928,
+    0.213 - co * 0.213 + si * 0.143, 0.715 + co * 0.285 + si * 0.14, 0.072 - co * 0.072 - si * 0.283,
+    0.213 - co * 0.213 - si * 0.787, 0.715 - co * 0.715 + si * 0.715, 0.072 + co * 0.928 + si * 0.072,
+  ];
+  const k = (v: number) => Math.max(0, Math.min(255, v));
+  return [k(c[0] * m[0] + c[1] * m[1] + c[2] * m[2]), k(c[0] * m[3] + c[1] * m[4] + c[2] * m[5]), k(c[0] * m[6] + c[1] * m[7] + c[2] * m[8])];
+}
+const toWhite = (c: RGB, f: number): RGB => [c[0] + (255 - c[0]) * f, c[1] + (255 - c[1]) * f, c[2] + (255 - c[2]) * f];
 const HEART_RED: RGB = [255, 22, 58];
 
 // Contorno de la cara (en orden) + rasgos: base de la máscara low-poly.
@@ -187,7 +199,6 @@ export default function NeonScan() {
       cancelAnimationFrame(raf);
       stream?.getTracks().forEach((t) => t.stop());
       det.face?.close(); det.hands?.close();
-      plasmaHum(false);
     };
     stopRef.current = stop;
     try {
@@ -249,7 +260,7 @@ export default function NeonScan() {
       };
 
       // ---- Partículas ----
-      const N = slow ? 4200 : 11000;
+      const N = slow ? 4500 : 12000;
       const px = new Float32Array(N), py = new Float32Array(N), vx = new Float32Array(N), vy = new Float32Array(N), pz = new Float32Array(N);
       const delay = new Float32Array(N), phaseArr = new Float32Array(N);
       const ea = new Uint16Array(N), eb = new Uint16Array(N), et = new Float32Array(N);
@@ -258,14 +269,14 @@ export default function NeonScan() {
         else { const e = tess[(Math.random() * tess.length) | 0]; ea[i] = e.start; eb[i] = e.end; et[i] = 0.2 + Math.random() * 0.6; }
         phaseArr[i] = Math.random();
       }
-      const shapeData: Record<number, Float32Array> = { 5: planet(N), 6: heart(N), 8: burst(N) };
-      let arcs: Pt[][] = [], arcsAt = 0, beatAt = 0, lastCount = -2;
+      const shapeData: Record<number, Float32Array> = { 6: heart(N), 8: burst(N) };
+      let beatAt = 0, lastCount = -2, boomAt = -1e9, boomX = 0, boomY = 0, boomR = 100;
       const heartHist: boolean[] = [];
       let heartAt: { x: number; y: number; r: number } | null = null;
       let shape = 0, shapeAt = 0, inited = false;
 
       // Campo de profundidad: capas lejanas (pequeñas, lentas) y cercanas (grandes, rápidas).
-      const dust = Array.from({ length: slow ? 200 : 480 }, () => ({ x: Math.random(), y: Math.random(), z: Math.pow(Math.random(), 1.6), s: Math.random() * Math.PI * 2 }));
+      const dust = Array.from({ length: slow ? 220 : 560 }, () => ({ x: Math.random(), y: Math.random(), z: Math.pow(Math.random(), 1.6), s: Math.random() * Math.PI * 2, g: (Math.random() * 3) | 0 }));
       let parX = 0, parY = 0;
       const sparks: Spark[] = [];
       const MAX_SPARKS = slow ? 220 : 520;
@@ -275,6 +286,8 @@ export default function NeonScan() {
       let bestSym = Infinity;
       let color: RGB = [...IDLE];
       let sprite = makeSprite(color), spriteAt = 0;
+      let tints: RGB[] = [color, color, color];
+      let sprites: HTMLCanvasElement[] = [sprite, sprite, sprite];
       const hist: number[] = [];
       const euro = new OneEuro(478 * 2);
       const rawBuf = new Float32Array(478 * 2);
@@ -350,8 +363,8 @@ export default function NeonScan() {
         if (hh) heartAt = hh;
         const heartOn = heartHist.filter(Boolean).length >= 4 && !!heartAt;
         const hand = handLm.length > 0;
-        // Corazón (manos) > puño (bola de energía) > palma abierta (estalla → plasma) > rostro.
-        const want = heartOn ? 6 : hand && fingersState === 0 ? 8 : hand && fingersState >= 4 ? 5 : 0;
+        // Corazón (manos) > puño (bola de energía) > rostro. Al abrir el puño: estallido.
+        const want = heartOn ? 6 : hand && fingersState === 0 ? 8 : 0;
         if (want !== shape) {
           const from = shape;
           shape = want; shapeAt = now;
@@ -359,26 +372,29 @@ export default function NeonScan() {
           if (shape === 8) {
             for (let i = 0; i < N; i++) delay[i] = Math.random() * 160; // todas corren al puño
             labSfx.implode();
-          } else if (shape === 5 && from === 8) {
-            // Se abre la mano: estallan desde el puño y luego forman la bola de plasma.
+          } else if (from === 8) {
+            // Se abre la mano: las partículas estallan desde el puño, vuelan y luego vuelven a su lugar.
             for (let i = 0; i < N; i++) {
-              const a = Math.random() * Math.PI * 2, sp = 14 + Math.random() * 30;
-              vx[i] = Math.cos(a) * sp; vy[i] = Math.sin(a) * sp; delay[i] = 420 + Math.random() * 520;
+              const a = Math.random() * Math.PI * 2, sp = 16 + Math.random() * 34;
+              vx[i] = Math.cos(a) * sp; vy[i] = Math.sin(a) * sp; delay[i] = 650 + Math.random() * 650;
             }
+            boomAt = now; boomX = ax; boomY = ay; boomR = aR;
             labSfx.blast();
-          } else if (shape === 5) {
-            for (let i = 0; i < N; i++) delay[i] = (i / N) * 1100 + Math.random() * 120; // de adentro hacia afuera
-          } else if (shape === 6) { labSfx.warm(); beatAt = now + 450; }
-          plasmaHum(shape === 5);
+          }
+          if (shape === 6) { labSfx.warm(); beatAt = now + 450; }
         }
         // Color: 1–5 dedos (rostro), y colores propios de cada figura.
         if (shape === 0 && hand && fingersState >= 1 && fingersState !== lastCount) labSfx.blip(fingersState);
         lastCount = hand ? fingersState : -2;
         if (shape === 6 && now >= beatAt) { labSfx.heartbeat(); beatAt = now + 1208; }
-        const tc = shape === 6 ? HEART_RED : shape === 5 ? PLASMA : !hand || fingersState < 0 ? IDLE : PALETTE[Math.min(5, fingersState)];
+        const tc = shape === 6 ? HEART_RED : !hand || fingersState < 0 ? IDLE : PALETTE[Math.min(5, fingersState)];
         const ck = 1 - Math.pow(1 - 0.12, f60);
         color = color.map((v, i) => v + (tc[i] - v) * ck) as RGB;
-        if (now - spriteAt > 90) { sprite = makeSprite(color); spriteAt = now; }
+        if (now - spriteAt > 90) {
+          const spread = shape === 6 ? 16 : 34;
+          tints = [color, hueRotate(color, spread), toWhite(hueRotate(color, -spread), 0.18)];
+          sprite = makeSprite(color); sprites = tints.map(makeSprite); spriteAt = now;
+        }
 
         // ---- Interpolación de la cara entre detecciones (60 fps) ----
         if (target) {
@@ -398,7 +414,7 @@ export default function NeonScan() {
           const x = d.x * W + Math.sin(t * 0.4 + d.s) * 12 - parX * 160 * d.z, y = d.y * H - parY * 90 * d.z;
           const s = 1.2 + d.z * d.z * 9;
           ctx.globalAlpha = 0.08 + d.z * 0.32;
-          ctx.drawImage(sprite, x - s, y - s, s * 2, s * 2);
+          ctx.drawImage(sprites[d.g], x - s, y - s, s * 2, s * 2);
         }
         ctx.globalAlpha = 1;
 
@@ -464,29 +480,17 @@ export default function NeonScan() {
             tR = Math.max(110, Math.hypot(Q[0].x - Q[9].x, Q[0].y - Q[9].y) * 1.55);
           }
         }
-        if (shape === 5) {
-          // Sobre la palma abierta: la mano con más dedos levantados.
-          let best = -1, bi = 0;
-          handLm.forEach((h, i) => { const c = countFingers(h); if (c > best) { best = c; bi = i; } });
-          const Q = handPts[bi];
-          if (Q) {
-            const cxp = (Q[0].x + Q[5].x + Q[9].x + Q[13].x + Q[17].x) / 5, cyp = (Q[0].y + Q[5].y + Q[9].y + Q[13].y + Q[17].y) / 5;
-            const size = Math.hypot(Q[0].x - Q[9].x, Q[0].y - Q[9].y);
-            tR = Math.max(120, size * 1.5); tx = cxp; ty = cyp - size * 0.5 - tR * 0.7;
-          }
-        }
         if (!aInit) { ax = tx; ay = ty; aR = tR; aInit = true; }
         const gk = 1 - Math.pow(1 - (shape === 0 ? 0.05 : 0.3), f60);
         ax += (tx - ax) * gk; ay += (ty - ay) * gk; aR += (tR - aR) * gk;
 
         // ---- Objetivo de cada partícula según la forma ----
         const sinceShape = now - shapeAt;
-        // Galaxia y planeta giran completos; las flores y el corazón se mecen de frente (con profundidad).
         // Paralaje: al mover la cabeza, la figura gira como si la vieras desde otro ángulo.
         const yawOff = (fcx / Math.max(1, W) - 0.5) * 0.5, pitchOff = (fcy / Math.max(1, H) - 0.45) * 0.25;
         const still = shape === 6; // el corazón siempre de frente, sin girar
-        const yaw = still ? 0 : (shape === 5 ? t * 0.6 : shape === 8 ? t * 1.8 : Math.sin(t * 0.5) * 0.4) + yawOff;
-        const pitch = still ? 0 : (shape === 5 ? 0.22 : 0.1) + pitchOff;
+        const yaw = still ? 0 : (shape === 8 ? t * 1.8 : Math.sin(t * 0.5) * 0.4) + yawOff;
+        const pitch = still ? 0 : 0.1 + pitchOff;
         const S = aR * 0.7;
         const cyw = Math.cos(yaw), syw = Math.sin(yaw), cp = Math.cos(pitch), sp = Math.sin(pitch);
         let gxs: Float32Array | null = null, gys: Float32Array | null = null, gzs: Float32Array | null = null;
@@ -511,11 +515,7 @@ export default function NeonScan() {
             }
           } else {
             let x = sd![i * 3], y = sd![i * 3 + 1], z = sd![i * 3 + 2];
-            if (shape === 5 && i < N * 0.6) {
-              // Superficie de plasma que vibra.
-              const j = 1 + 0.035 * Math.sin(t * 9 + i * 1.3) * Math.sin(t * 3.1 + i * 0.7);
-              x *= j; y *= j; z *= j;
-            } else if (shape === 8) {
+            if (shape === 8) {
               // Bola compacta y viva dentro del puño.
               const rr = 0.95 * Math.cbrt(phaseArr[i]) * (1 + 0.06 * Math.sin(t * 11 + i));
               x *= rr; y *= rr; z *= rr;
@@ -553,26 +553,36 @@ export default function NeonScan() {
           ctx.globalAlpha = 0.6 * heartGlow; ctx.drawImage(sprite, ax - s * 0.55, ay - s * 0.55, s * 1.1, s * 1.1);
           ctx.globalAlpha = 1;
         }
-        if (shape === 5) {
-          // Resplandor suave detrás de cada figura.
-          const s = aR * 1.5;
-          ctx.globalAlpha = 0.22; ctx.drawImage(sprite, ax - s, ay - s, s * 2, s * 2); ctx.globalAlpha = 1;
-        }
         const planes: [number, number, number, number][] = [[0.3, 9, 1.1, 0.35], [-0.3, 0.3, 1.8, 0.72], [-9, -0.3, 2.8, 1]];
         // Figuras compactas (plasma, bola del puño): TODAS las partículas (más densas), con brillo
         // repartido para que el color se mantenga y no se "queme" en blanco.
-        const compact = shape === 5 || shape === 8;
+        const compact = shape === 8;
         const dens = compact ? Math.min(1, Math.max(0.3, (aR * aR * 0.55) / N)) : 1;
         const vs = 1;
         for (const [lo, hi, size, al] of planes) {
-          ctx.fillStyle = rgba(color, Math.min(1, (al + heartGlow * 0.2) * dens));
           const s = (size + heartGlow * 0.6) * (compact ? 0.85 : 1);
-          for (let i = 0; i < N; i += vs) { const z = pz[i]; if (z >= lo && z < hi) ctx.fillRect(px[i] - s / 2, py[i] - s / 2, s, s); }
+          // Lo cercano se aclara (más luz), lo lejano conserva el color.
+          const lift = lo < -1 ? 0.28 : lo < 0 ? 0.1 : 0;
+          for (let g = 0; g < 3; g++) {
+            ctx.fillStyle = rgba(toWhite(tints[g], lift), Math.min(1, (al + heartGlow * 0.2) * dens));
+            for (let i = g; i < N; i += 3 * vs) { const z = pz[i]; if (z >= lo && z < hi) ctx.fillRect(px[i] - s / 2, py[i] - s / 2, s, s); }
+          }
         }
+        // Destellos en cruz (como estrellas) en algunas partículas cercanas.
+        ctx.globalAlpha = 0.85;
+        for (let i = 0; i < N; i += slow ? 97 : 53) {
+          const tw = 0.5 + 0.5 * Math.sin(t * 2.6 + i * 0.37);
+          if (pz[i] < 0 && tw > 0.86) {
+            const L = 9 + (tw - 0.86) * 90, sp2 = sprites[i % 3];
+            ctx.drawImage(sp2, px[i] - L, py[i] - 1.2, L * 2, 2.4);
+            ctx.drawImage(sp2, px[i] - 1.2, py[i] - L, 2.4, L * 2);
+          }
+        }
+        ctx.globalAlpha = 1;
         // Brillo: las partículas cercanas llevan un halo de luz (más en el corazón).
         const gstep = slow ? 6 : 3;
         ctx.globalAlpha = 0.5;
-        for (let i = 0; i < N; i += gstep * vs) { if (pz[i] < -0.05) { const s = 3.2 + (-pz[i]) * 2.5; ctx.drawImage(sprite, px[i] - s, py[i] - s, s * 2, s * 2); } }
+        for (let i = 0; i < N; i += gstep * vs) { if (pz[i] < -0.05) { const s = 3.2 + (-pz[i]) * 2.5; ctx.drawImage(sprites[i % 3], px[i] - s, py[i] - s, s * 2, s * 2); } }
         ctx.globalAlpha = 1;
         const step = heartGlow > 0 ? 9 : 13;
         for (let i = 0; i < N; i += step * vs) {
@@ -581,42 +591,17 @@ export default function NeonScan() {
             ctx.drawImage(sprite, px[i] - s, py[i] - s, s * 2, s * 2);
           }
         }
+        if (now - boomAt < 650) {
+          // Destello del estallido al abrir la mano.
+          const fl = 1 - (now - boomAt) / 650, s = boomR * (1 + (1 - fl) * 3.2);
+          ctx.globalAlpha = fl * 0.9; ctx.drawImage(sprite, boomX - s, boomY - s, s * 2, s * 2);
+          ctx.globalAlpha = fl * 0.6; ctx.drawImage(sprites[1], boomX - s * 0.5, boomY - s * 0.5, s, s); ctx.globalAlpha = 1;
+        }
         if (shape === 8) {
           // Núcleo y halo de la bola de energía.
           const s = aR * (1.35 + 0.08 * Math.sin(t * 12));
           ctx.globalAlpha = Math.min(1, sinceShape / 400) * 0.95; ctx.drawImage(sprite, ax - s, ay - s, s * 2, s * 2); ctx.globalAlpha = 1;
         }
-        if (shape === 5 && sinceShape < 500 && lastCount >= 0) {
-          // Destello al abrir la mano.
-          const fl = 1 - sinceShape / 500, s = aR * (1 + (1 - fl) * 3);
-          ctx.globalAlpha = fl * 0.8; ctx.drawImage(sprite, ax - s, ay - s, s * 2, s * 2); ctx.globalAlpha = 1;
-        }
-        if (shape === 5) {
-          // Núcleo de plasma + rayos eléctricos que saltan del planeta.
-          const form = Math.min(1, sinceShape / 1400);
-          const sr = S * 0.55, s = sr * (2.1 + 0.15 * Math.sin(t * 7));
-          ctx.globalAlpha = 0.45 * form; ctx.drawImage(sprite, ax - s, ay - s, s * 2, s * 2); ctx.globalAlpha = 1;
-          if (now - arcsAt > 70) {
-            arcsAt = now;
-            if (form > 0.6 && Math.random() < 0.45) labSfx.zap();
-            arcs = Array.from({ length: slow ? 2 : 3 }, () => {
-              const a = Math.random() * Math.PI * 2, len = sr * (0.75 + Math.random() * 0.25), pts: Pt[] = [];
-              for (let k = 0; k <= 6; k++) {
-                const f = k / 6, j = k === 0 || k === 6 ? 0 : (Math.random() - 0.5) * sr * 0.22;
-                pts.push({ x: ax + Math.cos(a) * len * f - Math.sin(a) * j, y: ay + Math.sin(a) * len * f + Math.cos(a) * j });
-              }
-              return pts;
-            });
-          }
-          if (form > 0.6) {
-            const ap = new Path2D();
-            for (const pl of arcs) { ap.moveTo(pl[0].x, pl[0].y); for (const p of pl) ap.lineTo(p.x, p.y); }
-            ctx.globalAlpha = 0.6 * form;
-            neon(ap, [170, 215, 255], 0.9, slow ? 6 : 10);
-            ctx.globalAlpha = 1;
-          }
-        }
-
         // ---- Manos: esqueleto neón + chispas ----
         handPts.forEach((Q, hi) => {
           const hp = new Path2D();
