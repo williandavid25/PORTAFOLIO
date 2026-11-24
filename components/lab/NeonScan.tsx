@@ -287,6 +287,8 @@ export default function NeonScan() {
       let shape = 0, shapeAt = 0, inited = false;
 
       // Campo de profundidad: capas lejanas (pequeñas, lentas) y cercanas (grandes, rápidas).
+      // Calidad adaptable: NA = partículas activas (se ajusta según los FPS reales).
+      let q = slow ? 0.7 : 1, NA = Math.floor(N * q);
       const dust = Array.from({ length: slow ? 220 : 560 }, () => ({ x: Math.random(), y: Math.random(), z: Math.pow(Math.random(), 1.6), s: Math.random() * Math.PI * 2, g: (Math.random() * 3) | 0 }));
       let parX = 0, parY = 0;
       const sparks: Spark[] = [];
@@ -423,7 +425,8 @@ export default function NeonScan() {
         ctx.globalCompositeOperation = "lighter";
 
         // ---- Polvo del ambiente ----
-        for (const d of dust) {
+        for (let di = 0, dn = Math.floor(dust.length * (0.4 + 0.6 * q)); di < dn; di++) {
+          const d = dust[di];
           d.y -= (0.00008 + 0.0004 * d.z) * f60;
           if (d.y < -0.05) { d.y = 1.05; d.x = Math.random(); }
           // Paralaje: al mover la cabeza, las capas cercanas se desplazan más que las lejanas.
@@ -464,7 +467,7 @@ export default function NeonScan() {
           }
           const path = new Path2D();
           for (const [a, b] of edges) { const A = P[KEY[a]], B = P[KEY[b]]; path.moveTo(A.x, A.y); path.lineTo(B.x, B.y); }
-          neon(path, color, slow ? 1.3 : 1.5, slow ? 10 : 15);
+          neon(path, color, slow ? 1.3 : 1.5, slow || q < 0.55 ? 9 : 15);
           for (const i of KEY) { const p = P[i]; ctx.drawImage(sprite, p.x - 4.5, p.y - 4.5, 9, 9); }
           ctx.globalAlpha = 1;
         }
@@ -521,7 +524,7 @@ export default function NeonScan() {
         }
         const sd = shapeData[shape];
         const pulse = shape === 6 ? 1 + 0.07 * Math.pow(Math.max(0, Math.sin(t * 5.2)), 6) : 1;
-        for (let i = 0; i < N; i++) {
+        for (let i = 0; i < NA; i++) {
           let X: number, Y: number, Z = 0;
           if (shape === 0) {
             if (!gxs) {
@@ -586,12 +589,12 @@ export default function NeonScan() {
           const lift = lo < -1 ? 0.28 : lo < 0 ? 0.1 : 0;
           for (let g = 0; g < 3; g++) {
             ctx.fillStyle = rgba(toWhite(tints[g], lift), Math.min(1, (al + heartGlow * 0.2) * dens));
-            for (let i = g; i < N; i += 3 * vs) { const z = pz[i]; if (z >= lo && z < hi) ctx.fillRect(px[i] - s / 2, py[i] - s / 2, s, s); }
+            for (let i = g; i < NA; i += 3 * vs) { const z = pz[i]; if (z >= lo && z < hi) ctx.fillRect(px[i] - s / 2, py[i] - s / 2, s, s); }
           }
         }
         // Destellos en cruz (como estrellas) en algunas partículas cercanas.
         ctx.globalAlpha = 0.85;
-        for (let i = 0; i < N; i += slow ? 97 : 53) {
+        for (let i = 0; i < NA; i += slow ? 97 : 53) {
           const tw = 0.5 + 0.5 * Math.sin(t * 2.6 + i * 0.37);
           if (pz[i] < 0 && tw > 0.86) {
             const L = 9 + (tw - 0.86) * 90, sp2 = sprites[i % 3];
@@ -601,12 +604,12 @@ export default function NeonScan() {
         }
         ctx.globalAlpha = 1;
         // Brillo: las partículas cercanas llevan un halo de luz (más en el corazón).
-        const gstep = slow ? 6 : 3;
+        const gstep = (slow ? 6 : 3) * (q < 0.6 ? 2 : 1);
         ctx.globalAlpha = 0.5;
-        for (let i = 0; i < N; i += gstep * vs) { if (pz[i] < -0.05) { const s = 3.2 + (-pz[i]) * 2.5; ctx.drawImage(sprites[i % 3], px[i] - s, py[i] - s, s * 2, s * 2); } }
+        for (let i = 0; i < NA; i += gstep * vs) { if (pz[i] < -0.05) { const s = 3.2 + (-pz[i]) * 2.5; ctx.drawImage(sprites[i % 3], px[i] - s, py[i] - s, s * 2, s * 2); } }
         ctx.globalAlpha = 1;
         const step = heartGlow > 0 ? 9 : 13;
-        for (let i = 0; i < N; i += step * vs) {
+        for (let i = 0; i < NA; i += step * vs) {
           if (pz[i] < 0.1 && (heartGlow > 0 || 0.5 + 0.5 * Math.sin(t * 3 + i) > 0.8)) {
             const s = heartGlow > 0 ? 6 + heartGlow * 3 : 6;
             ctx.drawImage(sprite, px[i] - s, py[i] - s, s * 2, s * 2);
@@ -664,7 +667,13 @@ export default function NeonScan() {
         ctx.globalCompositeOperation = "source-over";
 
         fpsN++;
-        if (now - fpsT >= 500) { fps = (fpsN * 1000) / (now - fpsT); fpsN = 0; fpsT = now; }
+        if (now - fpsT >= 500) {
+          fps = (fpsN * 1000) / (now - fpsT); fpsN = 0; fpsT = now;
+          // Calidad automática: si el equipo se traba, menos partículas y brillo; si sobra, vuelve a subir.
+          if (fps < 47) q = Math.max(0.3, q * 0.82);
+          else if (fps > 57 && q < 1) q = Math.min(1, q * 1.08);
+          NA = Math.floor(N * q);
+        }
         if (now - hudT > 250) {
           hudT = now;
           setHud({ fps, fingers: fingersState, shape, face: facePresent, color: rgba(color) });
