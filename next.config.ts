@@ -26,6 +26,16 @@ const csp = [
   ...(isDev ? [] : ["upgrade-insecure-requests"]),
 ].join("; ");
 
+// Solo /lab: cámara permitida y el detector de MediaPipe (WebAssembly desde jsDelivr,
+// modelos desde Google). El resto del sitio sigue con la cámara bloqueada.
+const labCsp = csp
+  .replace("script-src 'self' 'unsafe-inline'", "script-src 'self' 'unsafe-inline' 'wasm-unsafe-eval' https://cdn.jsdelivr.net")
+  .replace("connect-src 'self'", "connect-src 'self' https://cdn.jsdelivr.net https://storage.googleapis.com");
+const labHeaders = [
+  { key: "Content-Security-Policy", value: labCsp },
+  { key: "Permissions-Policy", value: "camera=(self), microphone=(), geolocation=(), payment=(), usb=()" },
+];
+
 const securityHeaders = [
   { key: "Content-Security-Policy", value: csp },
   { key: "Strict-Transport-Security", value: "max-age=63072000; includeSubDomains; preload" },
@@ -46,7 +56,7 @@ const nextConfig: NextConfig = {
     formats: ["image/avif", "image/webp"],
   },
   async headers() {
-    return [{ source: "/:path*", headers: securityHeaders }];
+    return [{ source: "/:path*", headers: securityHeaders }, { source: "/lab", headers: labHeaders }];
   },
 };
 

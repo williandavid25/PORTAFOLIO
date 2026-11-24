@@ -13,6 +13,7 @@ const LINKS = [
   { href: "/portafolio", id: "portafolio", label: "Portafolio" },
   { href: "/#testimonios", id: "testimonios", label: "Testimonios" },
   { href: "/#contacto", id: "contacto", label: "Contacto" },
+  { href: "/lab", id: "lab", label: "Lab" },
 ];
 
 export default function Nav({ name, role }: { name: string; role: string }) {
