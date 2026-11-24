@@ -45,66 +45,6 @@ export function rose(n: number) {
   return out;
 }
 
-/** Flor de loto: tres coronas de pétalos (de abiertas a cerradas) + centro + hoja de agua. */
-export function lotus(n: number) {
-  const out = new Float32Array(n * 3);
-  const layers = [
-    { count: 9, len: 1.05, open: 1.25, rot: 0 },
-    { count: 9, len: 0.85, open: 0.8, rot: Math.PI / 9 },
-    { count: 7, len: 0.6, open: 0.35, rot: 0.2 },
-  ];
-  for (let i = 0; i < n; i++) {
-    let x: number, y: number, z: number;
-    const k = R();
-    if (k < 0.82) {
-      const L = layers[k < 0.38 ? 0 : k < 0.64 ? 1 : 2];
-      const p = Math.floor(R() * L.count), phi = L.rot + (p / L.count) * Math.PI * 2;
-      const s = Math.pow(R(), 0.9), w = (R() * 2 - 1);
-      const e = L.open; // inclinación desde la vertical
-      const dx = Math.cos(phi) * Math.sin(e), dy = Math.cos(e), dz = Math.sin(phi) * Math.sin(e);
-      const sx = -Math.sin(phi), sz = Math.cos(phi);
-      const width = 0.3 * Math.sin(Math.PI * Math.pow(s, 0.75)) * L.len;
-      x = dx * s * L.len + sx * w * width;
-      y = dy * s * L.len + s * s * 0.18 + Math.abs(w) * width * 0.25; // pétalo cóncavo y punta hacia arriba
-      z = dz * s * L.len + sz * w * width;
-      y -= 0.25;
-    } else if (k < 0.9) {
-      // Centro (semillero).
-      const a = R() * Math.PI * 2, r = Math.sqrt(R()) * 0.16;
-      x = Math.cos(a) * r; z = Math.sin(a) * r; y = -0.12 + (R() - 0.5) * 0.06;
-    } else {
-      // Hoja de agua (anillo plano).
-      const a = R() * Math.PI * 2, r = 0.85 + R() * 0.2;
-      x = Math.cos(a) * r; z = Math.sin(a) * r; y = -0.34 + (R() - 0.5) * 0.02;
-    }
-    out[i * 3] = x; out[i * 3 + 1] = y; out[i * 3 + 2] = z;
-  }
-  return out;
-}
-
-/** Galaxia espiral de tres brazos, inclinada. */
-export function galaxy(n: number) {
-  const out = new Float32Array(n * 3);
-  const tilt = 1.05, ct = Math.cos(tilt), st = Math.sin(tilt);
-  for (let i = 0; i < n; i++) {
-    let x: number, y: number, z: number;
-    if (R() < 0.18) {
-      // Núcleo brillante.
-      const a = R() * Math.PI * 2, b = Math.acos(R() * 2 - 1), r = Math.pow(R(), 2) * 0.22;
-      x = r * Math.sin(b) * Math.cos(a); y = r * Math.cos(b) * 0.6; z = r * Math.sin(b) * Math.sin(a);
-    } else {
-      const arm = Math.floor(R() * 3), r = 0.12 + Math.pow(R(), 0.7) * 1.05;
-      const th = arm * (Math.PI * 2 / 3) + r * 3.4 + (R() - 0.5) * 0.5 * (1.2 - r);
-      x = r * Math.cos(th) + (R() - 0.5) * 0.06; z = r * Math.sin(th) + (R() - 0.5) * 0.06;
-      y = (R() - 0.5) * 0.08 * (1.2 - r);
-    }
-    // Inclinación para verla en perspectiva.
-    const y2 = y * ct - z * st, z2 = y * st + z * ct;
-    out[i * 3] = x; out[i * 3 + 1] = y2; out[i * 3 + 2] = z2;
-  }
-  return out;
-}
-
 /** Corazón 3D relleno. */
 export function heart(n: number) {
   const out = new Float32Array(n * 3);
@@ -113,13 +53,13 @@ export function heart(n: number) {
     const hx = 16 * Math.pow(Math.sin(t), 3);
     const hy = 13 * Math.cos(t) - 5 * Math.cos(2 * t) - 2 * Math.cos(3 * t) - Math.cos(4 * t);
     const x = (hx / 16) * s, y = (hy / 16) * s + 0.1;
-    const depth = 0.5 * Math.sqrt(Math.max(0, 1 - s * s * 0.85));
+    const depth = 0.3 * Math.sqrt(Math.max(0, 1 - s * s * 0.85));
     out[i * 3] = x; out[i * 3 + 1] = y; out[i * 3 + 2] = (R() * 2 - 1) * depth;
   }
   return out;
 }
 
-/** Explosión: direcciones (esfera) + fase de cada partícula; el radio crece con el tiempo. */
+/** Esfera unitaria (direcciones repartidas de forma pareja): base de la bola del puño. */
 export function burst(n: number) {
   const out = new Float32Array(n * 3);
   for (let i = 0; i < n; i++) {
