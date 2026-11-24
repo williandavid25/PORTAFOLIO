@@ -2,8 +2,7 @@
 
 import Link from "next/link";
 import { useEffect, useRef, useState } from "react";
-import type { FaceLandmarker, HandLandmarker, ImageSegmenter, NormalizedLandmark } from "@mediapipe/tasks-vision";
-import CodeTyper from "./CodeTyper";
+import type { FaceLandmarker, HandLandmarker, NormalizedLandmark } from "@mediapipe/tasks-vision";
 import { burst, galaxy, heart, lotus, planet, rose } from "./shapes";
 
 /**
@@ -19,7 +18,6 @@ const VER = "1.2.3";
 const WASM = `https://cdn.jsdelivr.net/npm/@mediapipe/tasks-vision@${VER}/wasm`;
 const FACE_MODEL = "https://storage.googleapis.com/mediapipe-models/face_landmarker/face_landmarker/float16/1/face_landmarker.task";
 const HAND_MODEL = "https://storage.googleapis.com/mediapipe-models/hand_landmarker/hand_landmarker/float16/1/hand_landmarker.task";
-const SEG_MODEL = "https://storage.googleapis.com/mediapipe-models/image_segmenter/selfie_segmenter/float16/latest/selfie_segmenter.tflite";
 
 type RGB = [number, number, number];
 /** Color por número de dedos (0 = puño … 5 = mano abierta). */
@@ -165,13 +163,11 @@ type Spark = { x: number; y: number; vx: number; vy: number; life: number; max: 
 export default function NeonScan() {
   const wrapRef = useRef<HTMLDivElement>(null);
   const videoRef = useRef<HTMLVideoElement>(null);
-  const personRef = useRef<HTMLCanvasElement>(null);
   const canvasRef = useRef<HTMLCanvasElement>(null);
   const [phase, setPhase] = useState<Phase>("idle");
   const [error, setError] = useState("");
   const [hud, setHud] = useState({ fps: 0, fingers: -1, shape: 0, face: false, color: rgba(IDLE) });
   const [hideHud, setHideHud] = useState(false);
-  const [segOk, setSegOk] = useState(true);
   const stopRef = useRef<() => void>(() => {});
   const manualRef = useRef(0);
 
@@ -181,14 +177,14 @@ export default function NeonScan() {
     setPhase("loading");
     setError("");
     let stream: MediaStream | null = null;
-    const det: { face: FaceLandmarker | null; hands: HandLandmarker | null; seg: ImageSegmenter | null } = { face: null, hands: null, seg: null };
+    const det: { face: FaceLandmarker | null; hands: HandLandmarker | null } = { face: null, hands: null };
     let raf = 0;
     let alive = true;
     const stop = () => {
       alive = false;
       cancelAnimationFrame(raf);
       stream?.getTracks().forEach((t) => t.stop());
-      det.face?.close(); det.hands?.close(); det.seg?.close();
+      det.face?.close(); det.hands?.close();
     };
     stopRef.current = stop;
     try {
@@ -201,13 +197,9 @@ export default function NeonScan() {
       const make = async (delegate: "GPU" | "CPU") => {
         det.face = await vision.FaceLandmarker.createFromOptions(files, { baseOptions: { modelAssetPath: FACE_MODEL, delegate }, runningMode: "VIDEO", numFaces: 1, minFaceDetectionConfidence: 0.5, minFacePresenceConfidence: 0.5, minTrackingConfidence: 0.5 });
         det.hands = await vision.HandLandmarker.createFromOptions(files, { baseOptions: { modelAssetPath: HAND_MODEL, delegate }, runningMode: "VIDEO", numHands: 2, minHandDetectionConfidence: 0.5, minTrackingConfidence: 0.5 });
-        try {
-          det.seg = await vision.ImageSegmenter.createFromOptions(files, { baseOptions: { modelAssetPath: SEG_MODEL, delegate }, runningMode: "VIDEO", outputConfidenceMasks: true, outputCategoryMask: false });
-        } catch { det.seg = null; }
       };
       try { await make("GPU"); } catch { await make("CPU"); }
       if (!alive) return stop();
-      setSegOk(!!det.seg);
       setPhase("running");
       run(vision.FaceLandmarker.FACE_LANDMARKS_TESSELATION, vision.HandLandmarker.HAND_CONNECTIONS);
     } catch (e) {
@@ -224,15 +216,13 @@ export default function NeonScan() {
 
     function run(tess: { start: number; end: number }[], handConn: { start: number; end: number }[]) {
       const video = videoRef.current!, canvas = canvasRef.current!, ctx = canvas.getContext("2d")!;
-      const pcv = personRef.current!, pctx = pcv.getContext("2d")!;
       const slow = innerWidth < 700 || (navigator.hardwareConcurrency ?? 8) <= 4;
       const dpr = Math.min(devicePixelRatio || 1, slow ? 1.5 : 2);
       let W = 0, H = 0;
       const resize = () => {
         W = canvas.clientWidth; H = canvas.clientHeight;
-        for (const c of [canvas, pcv]) { c.width = Math.round(W * dpr); c.height = Math.round(H * dpr); }
+        canvas.width = Math.round(W * dpr); canvas.height = Math.round(H * dpr);
         ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
-        pctx.setTransform(dpr, 0, 0, dpr, 0, 0);
       };
       resize();
       const onKey = (e: KeyboardEvent) => {
@@ -256,13 +246,8 @@ export default function NeonScan() {
         return { x: W - (c.ox + l.x * c.vw * c.s), y: c.oy + l.y * c.vh * c.s };
       };
 
-      // ---- Segmentación de persona (entrada y máscara pequeñas = rápido) ----
-      const segIn = document.createElement("canvas"), segCtx = segIn.getContext("2d", { willReadFrequently: false })!;
-      const maskCv = document.createElement("canvas"), maskCtx = maskCv.getContext("2d")!;
-      let maskImg: ImageData | null = null, hasMask = false;
-
       // ---- Partículas ----
-      const N = slow ? 1600 : 3400;
+      const N = slow ? 2600 : 6000;
       const px = new Float32Array(N), py = new Float32Array(N), vx = new Float32Array(N), vy = new Float32Array(N), pz = new Float32Array(N);
       const delay = new Float32Array(N), phaseArr = new Float32Array(N);
       const ea = new Uint16Array(N), eb = new Uint16Array(N), et = new Float32Array(N);
@@ -279,7 +264,7 @@ export default function NeonScan() {
       let heartAt: { x: number; y: number; r: number } | null = null;
       let shape = 0, shapeAt = 0, inited = false;
 
-      const dust = Array.from({ length: slow ? 70 : 150 }, () => ({ x: Math.random(), y: Math.random(), z: 0.3 + Math.random() * 0.7, s: Math.random() * Math.PI * 2 }));
+      const dust = Array.from({ length: slow ? 110 : 260 }, () => ({ x: Math.random(), y: Math.random(), z: 0.3 + Math.random() * 0.7, s: Math.random() * Math.PI * 2 }));
       const sparks: Spark[] = [];
       const MAX_SPARKS = slow ? 220 : 520;
 
@@ -328,25 +313,6 @@ export default function NeonScan() {
         handLm = hr.landmarks ?? [];
         handPts = handLm.map((h) => h.map(map));
       };
-      const runSeg = (now: number) => {
-        if (!det.seg) return;
-        const vw = video.videoWidth || 1280, vh = video.videoHeight || 720;
-        const sw = 256, sh = Math.max(64, Math.round((256 * vh) / vw));
-        if (segIn.width !== sw || segIn.height !== sh) { segIn.width = maskCv.width = sw; segIn.height = maskCv.height = sh; maskImg = maskCtx.createImageData(sw, sh); }
-        segCtx.drawImage(video, 0, 0, sw, sh);
-        det.seg.segmentForVideo(segIn, now + 0.02, (res) => {
-          const m = res.confidenceMasks?.[0];
-          if (!m || !maskImg) return;
-          const a = m.getAsFloat32Array(), d = maskImg.data;
-          for (let i = 0; i < a.length; i++) {
-            const v = Math.min(1, Math.max(0, (a[i] - 0.3) / 0.45)); // borde nítido pero suave
-            d[i * 4] = d[i * 4 + 1] = d[i * 4 + 2] = 255; d[i * 4 + 3] = (v * v * (3 - 2 * v) * 255) | 0;
-          }
-          maskCtx.putImageData(maskImg, 0, 0);
-          hasMask = true;
-        });
-      };
-
       const detect = (now: number) => {
         if (video.readyState < 2 || video.currentTime === lastVT) return;
         lastVT = video.currentTime;
@@ -355,9 +321,8 @@ export default function NeonScan() {
         // Equipo rápido: todo en cada cuadro. Lento: se turnan (la animación sigue a 60 fps).
         const rr = slow || detCost > 18;
         try {
-          if (!rr || turn % 3 !== 2) runFace(now);
-          if (!rr || turn % 3 === 2) runHands(now);
-          if (!rr ? turn % 2 === 0 : turn % 3 === 1) runSeg(now);
+          if (!rr || turn % 2 === 0) runFace(now);
+          if (!rr || turn % 2 === 1) runHands(now);
         } catch { /* un cuadro fallido no detiene el escáner */ }
         detCost = detCost * 0.8 + (performance.now() - t0) * 0.2;
       };
@@ -371,20 +336,6 @@ export default function NeonScan() {
         const t = now / 1000;
         detect(now);
         const facePresent = now - faceSeen < 450;
-
-        // ---- Persona recortada (encima del código) ----
-        if (det.seg && hasMask) {
-          const c = cover();
-          pctx.clearRect(0, 0, W, H);
-          pctx.save();
-          pctx.translate(W, 0); pctx.scale(-1, 1);
-          pctx.globalCompositeOperation = "source-over";
-          pctx.drawImage(video, c.ox, c.oy, c.vw * c.s, c.vh * c.s);
-          pctx.globalCompositeOperation = "destination-in";
-          pctx.imageSmoothingEnabled = true;
-          pctx.drawImage(maskCv, c.ox, c.oy, c.vw * c.s, c.vh * c.s);
-          pctx.restore();
-        }
 
         // ---- Dedos → forma y color ----
         const raw = handLm.length ? Math.max(...handLm.map(countFingers)) : -1;
@@ -501,8 +452,11 @@ export default function NeonScan() {
         // ---- Objetivo de cada partícula según la forma ----
         const sinceShape = now - shapeAt;
         // Galaxia y planeta giran completos; las flores y el corazón se mecen de frente (con profundidad).
-        const yaw = shape === 3 ? t * 0.22 : shape === 5 ? t * 0.6 : shape === 7 ? t * 0.3 : Math.sin(t * 0.55) * 0.6, pitch = shape === 5 ? 0.22 : shape === 1 ? 0.34 : 0.16;
-        const S = aR * 0.8;
+        // Paralaje: al mover la cabeza, la figura gira como si la vieras desde otro ángulo.
+        const yawOff = (fcx / Math.max(1, W) - 0.5) * 1.1, pitchOff = (fcy / Math.max(1, H) - 0.45) * 0.6;
+        const yaw = (shape === 3 ? t * 0.22 : shape === 5 ? t * 0.6 : shape === 7 ? t * 0.3 : Math.sin(t * 0.55) * 0.6) + yawOff;
+        const pitch = (shape === 5 ? 0.22 : shape === 1 ? 0.34 : 0.16) + pitchOff;
+        const S = aR * (shape === 3 ? 0.62 : 0.7);
         const cyw = Math.cos(yaw), syw = Math.sin(yaw), cp = Math.cos(pitch), sp = Math.sin(pitch);
         let gxs: Float32Array | null = null, gys: Float32Array | null = null, gzs: Float32Array | null = null;
         if (shape === 0 && P) {
@@ -535,10 +489,10 @@ export default function NeonScan() {
               const r = Math.min(1.3, (sinceShape / 1000) * (0.7 + phaseArr[i] * 0.9)), rr = 0.1 + 2.2 * Math.pow(r, 0.6);
               x *= rr; z *= rr; y = y * rr - r * r * 0.35;
             }
-            x *= pulse; y *= pulse; z *= pulse * 1.3;
+            x *= pulse; y *= pulse; z *= pulse * 1.6;
             const x2 = x * cyw + z * syw, z2 = -x * syw + z * cyw;
             const y2 = y * cp - z2 * sp, z3 = y * sp + z2 * cp;
-            const per = 1 / (1 + z3 * 0.42);
+            const per = 1 / Math.max(0.35, 1 + z3 * 0.62);
             X = ax + x2 * S * per; Y = ay - y2 * S * per; Z = z3;
           }
           pz[i] = Z;
@@ -568,17 +522,26 @@ export default function NeonScan() {
           ctx.globalAlpha = 0.6 * heartGlow; ctx.drawImage(sprite, ax - s * 0.55, ay - s * 0.55, s * 1.1, s * 1.1);
           ctx.globalAlpha = 1;
         }
-        const planes: [number, number, number, number][] = [[0.28, 9, 0.9, 0.2], [-0.28, 0.28, 1.4, 0.5], [-9, -0.28, 2.2, 0.95]];
+        if (shape !== 0 && shape !== 6) {
+          // Resplandor suave detrás de cada figura.
+          const s = aR * 1.5;
+          ctx.globalAlpha = 0.22; ctx.drawImage(sprite, ax - s, ay - s, s * 2, s * 2); ctx.globalAlpha = 1;
+        }
+        const planes: [number, number, number, number][] = [[0.3, 9, 1.1, 0.35], [-0.3, 0.3, 1.8, 0.72], [-9, -0.3, 2.8, 1]];
         for (const [lo, hi, size, al] of planes) {
           ctx.fillStyle = rgba(color, Math.min(1, al + heartGlow * 0.2));
           const s = size + heartGlow * 0.6;
           for (let i = 0; i < N; i++) { const z = pz[i]; if (z >= lo && z < hi) ctx.fillRect(px[i] - s / 2, py[i] - s / 2, s, s); }
         }
-        // Destellos solo en las partículas cercanas (y muchos más en el corazón).
-        const step = heartGlow > 0 ? 5 : 23;
+        // Brillo: las partículas cercanas llevan un halo de luz (más en el corazón).
+        const gstep = slow ? 6 : 3;
+        ctx.globalAlpha = 0.5;
+        for (let i = 0; i < N; i += gstep) { if (pz[i] < -0.05) { const s = 3.2 + (-pz[i]) * 2.5; ctx.drawImage(sprite, px[i] - s, py[i] - s, s * 2, s * 2); } }
+        ctx.globalAlpha = 1;
+        const step = heartGlow > 0 ? 5 : 11;
         for (let i = 0; i < N; i += step) {
           if (pz[i] < 0.1 && (heartGlow > 0 || 0.5 + 0.5 * Math.sin(t * 3 + i) > 0.8)) {
-            const s = heartGlow > 0 ? 6 + heartGlow * 3 : 4;
+            const s = heartGlow > 0 ? 6 + heartGlow * 3 : 6;
             ctx.drawImage(sprite, px[i] - s, py[i] - s, s * 2, s * 2);
           }
         }
@@ -656,10 +619,8 @@ export default function NeonScan() {
   };
 
   return (
-    <div className={`lab${segOk ? "" : " noseg"}`} ref={wrapRef} style={{ ["--lab-c" as string]: hud.color }}>
+    <div className="lab" ref={wrapRef} style={{ ["--lab-c" as string]: hud.color }}>
       <video ref={videoRef} className="lab-video" playsInline muted aria-hidden="true" />
-      {phase === "running" && <CodeTyper />}
-      <canvas ref={personRef} className="lab-person" aria-hidden="true" />
       <canvas ref={canvasRef} className="lab-canvas" aria-hidden="true" />
 
       {!hideHud && <Link href="/" className="lab-back" aria-label="Volver a DevWilly">←</Link>}
