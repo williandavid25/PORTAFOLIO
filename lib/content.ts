@@ -40,7 +40,7 @@ export const siteSchema = z.object({
   whatsapp: z.string().trim().regex(/^\d{0,15}$/, "Solo números con código de país"),
   location: z.string().trim().max(80),
   cvUrl: url,
-  socials: z.object({ instagram: url, tiktok: url, youtube: url, facebook: url }),
+  socials: z.object({ linkedin: url, github: url, facebook: url, instagram: url, tiktok: url, youtube: url }),
   /** Herramientas que usa, en grupos (Edición, Programación, Community). */
   tools: z.array(z.object({
     group: z.string().trim().min(1).max(40),
@@ -73,7 +73,7 @@ export const DEFAULT_SITE: SiteData = {
   whatsapp: "",
   location: "Ecuador",
   cvUrl: "",
-  socials: { instagram: "", tiktok: "", youtube: "", facebook: "" },
+  socials: { linkedin: "", github: "https://github.com/williandavid25", facebook: "", instagram: "", tiktok: "", youtube: "" },
   tools: [
     { group: "Edición de video", items: ["Premiere Pro", "CapCut", "After Effects", "DaVinci Resolve"] },
     { group: "Programación", items: ["Visual Studio Code", "Git", "GitHub", "HTML", "CSS", "JavaScript"] },

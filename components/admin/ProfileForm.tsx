@@ -158,7 +158,7 @@ export default function ProfileForm({ initial, heroSrc, aboutSrc }: Props) {
           <div className="f"><label htmlFor="c-loc">Ubicación</label><input id="c-loc" className="in" value={d.location} onChange={(e) => set("location", e.target.value)} maxLength={80} /></div>
         </div>
         <div className="grid2">
-          {(["instagram", "tiktok", "youtube", "facebook"] as const).map((k) => (
+          {(["linkedin", "github", "facebook", "instagram", "tiktok", "youtube"] as const).map((k) => (
             <div className="f" key={k}><label htmlFor={`so-${k}`} style={{ textTransform: "capitalize" }}>{k}</label><input id={`so-${k}`} className="in" type="url" value={d.socials[k]} onChange={(e) => set("socials", { ...d.socials, [k]: e.target.value })} placeholder="https://…" /></div>
           ))}
         </div>

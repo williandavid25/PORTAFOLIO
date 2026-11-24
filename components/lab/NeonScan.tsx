@@ -4,7 +4,7 @@ import Link from "next/link";
 import { useEffect, useRef, useState } from "react";
 import type { FaceLandmarker, HandLandmarker, NormalizedLandmark } from "@mediapipe/tasks-vision";
 import { burst, heart } from "./shapes";
-import { labAmbience, labSfx, unlockAudio } from "@/components/motion/sfx";
+import { labSfx, unlockAudio } from "@/components/motion/sfx";
 
 /**
  * DevWilly Lab — escáner neón con la cámara.
@@ -111,14 +111,15 @@ function countFingers(h: NormalizedLandmark[]) {
     const ax = h[p].x - h[m].x, ay = h[p].y - h[m].y, bx = h[t].x - h[p].x, by = h[t].y - h[p].y;
     return (ax * bx + ay * by) / (Math.hypot(ax, ay) * Math.hypot(bx, by) + 1e-9);
   };
-  let n = 0;
-  // Pulgar: separado del índice y alejado de la palma (si está doblado sobre la palma, no cuenta).
-  if (d(4, 5) / size > 0.5 && d(4, 17) > d(2, 17) * 1.12 && straight(2, 3, 4) > 0.4) n++;
   // Índice, medio, anular y meñique: punta lejos de la muñeca y dedo recto.
+  let four = 0;
   for (const [m, p, t] of [[5, 6, 8], [9, 10, 12], [13, 14, 16], [17, 18, 20]]) {
-    if (d(t, 0) > d(p, 0) * 1.08 && straight(m, p, t) > 0.5) n++;
+    if (d(t, 0) > d(p, 0) * 1.08 && straight(m, p, t) > 0.5) four++;
   }
-  return n;
+  // Pulgar: solo cuenta si está claramente estirado y separado de la mano.
+  // (En un puño el pulgar queda doblado sobre los dedos: no cuenta → 0 = puño.)
+  const thumbUp = straight(2, 3, 4) > 0.75 && d(4, 9) / size > (four === 0 ? 0.95 : 0.7) && d(4, 5) / size > 0.55;
+  return four + (thumbUp ? 1 : 0);
 }
 
 /**
@@ -209,7 +210,6 @@ export default function NeonScan() {
       cancelAnimationFrame(raf);
       stream?.getTracks().forEach((t) => t.stop());
       det.face?.close(); det.hands?.close();
-      labAmbience(false);
     };
     stopRef.current = stop;
     try {
@@ -281,8 +281,7 @@ export default function NeonScan() {
         phaseArr[i] = Math.random();
       }
       const shapeData: Record<number, Float32Array> = { 6: heart(N), 8: burst(N) };
-      let hadFace = false, hadHand = false, chargeAt = 0;
-      labAmbience(true);
+      let hadHand = false, charged = false;
       let beatAt = 0, lastCount = -2, boomAt = -1e9, boomX = 0, boomY = 0, boomR = 100;
       const heartHist: boolean[] = [];
       let heartAt: { x: number; y: number; r: number } | null = null;
@@ -346,13 +345,13 @@ export default function NeonScan() {
       const detect = (now: number) => {
         if (video.readyState < 2 || video.currentTime === lastVT) return;
         // Si detectar es caro (equipo sin tarjeta gráfica), se espacia: la animación conserva cuadros libres y fluye.
-        if (detCost > 16 && now - lastDet < Math.min(140, detCost * 1.6)) return;
+        if (detCost > 45 && now - lastDet < Math.min(90, detCost)) return;
         lastDet = now;
         lastVT = video.currentTime;
         const t0 = performance.now();
         turn++;
         // Equipo rápido: todo en cada cuadro. Lento: se turnan (la animación sigue a 60 fps).
-        const rr = slow || detCost > 18;
+        const rr = slow || detCost > 30;
         try {
           if (!rr || turn % 2 === 0) runFace(now);
           if (!rr || turn % 2 === 1) runHands(now);
@@ -405,12 +404,12 @@ export default function NeonScan() {
         if (shape === 0 && hand && fingersState >= 1 && fingersState !== lastCount) {
           labSfx.blip(fingersState);
         }
-        // Sonidos de contexto: rostro fijado, mano que entra, energía que se carga en el puño.
-        if (facePresent && !hadFace) labSfx.faceLock();
-        hadFace = facePresent;
+        // Sonidos solo con movimientos: mano que entra y energía que se carga en el puño.
         if (hand && !hadHand) labSfx.handIn();
         hadHand = hand;
-        if (shape === 8 && now - shapeAt > 650 && now >= chargeAt) { labSfx.charge(); chargeAt = now + 1500; }
+        // Carga de energía: una sola vez al mantener el puño (no se repite).
+        if (shape === 8 && !charged && now - shapeAt > 650) { labSfx.charge(); charged = true; }
+        if (shape !== 8) charged = false;
         lastCount = hand ? fingersState : -2;
         if (shape === 6 && now >= beatAt) { labSfx.heartbeat(); beatAt = now + 1208; }
         const tc = shape === 6 ? HEART_RED : !hand || fingersState < 0 ? IDLE : PALETTE[Math.min(5, fingersState)];
@@ -589,7 +588,7 @@ export default function NeonScan() {
         // Figuras compactas (plasma, bola del puño): TODAS las partículas (más densas), con brillo
         // repartido para que el color se mantenga y no se "queme" en blanco.
         const compact = shape === 8;
-        const dens = compact ? Math.min(1, Math.max(0.3, (aR * aR * 0.55) / N)) : 1;
+        const dens = compact ? Math.min(1, Math.max(0.3, (aR * aR * 0.55) / Math.max(1, NA))) : 1;
         const vs = 1;
         for (const [lo, hi, size, al] of planes) {
           const s = (size + heartGlow * 0.6) * (compact ? 0.85 : 1);
