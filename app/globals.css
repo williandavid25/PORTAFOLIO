@@ -766,3 +766,56 @@ textarea.fi { resize: vertical; min-height: 130px; }
 .app-tiktok svg { filter: drop-shadow(-1.4px -1px 0 #25f4ee) drop-shadow(1.4px 1px 0 #fe2c55); }
 .app-youtube { background: #ff0000; } .app-youtube:hover, .app-youtube:focus-visible { background: #ff0000; box-shadow: 0 10px 26px rgba(255, 0, 0, 0.45); }
 @media (max-width: 640px) { .si.app { width: 38px; height: 38px; border-radius: 11px; } .si.app svg { width: 19px; height: 19px; } }
+
+/* ---- Íconos de redes con profundidad (estilo ícono de app real) ---- */
+.socials { gap: 12px; perspective: 600px; }
+.socials .si.app { width: 46px; height: 46px; border-radius: 14px; overflow: hidden; isolation: isolate; transform-style: preserve-3d;
+  box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.35), inset 0 -2px 4px rgba(0, 0, 0, 0.35), 0 1px 1px rgba(0, 0, 0, 0.4), 0 8px 18px -6px rgba(0, 0, 0, 0.7), 0 14px 28px -12px var(--glow, rgba(0, 0, 0, 0.6));
+  transition: transform 0.45s cubic-bezier(0.2, 0.8, 0.2, 1), box-shadow 0.45s, filter 0.45s; }
+/* Brillo de cristal en la mitad superior. */
+.socials .si.app::before { content: ""; position: absolute; inset: 0; z-index: 1; pointer-events: none; border-radius: inherit;
+  background: linear-gradient(180deg, rgba(255, 255, 255, 0.34) 0%, rgba(255, 255, 255, 0.08) 42%, rgba(255, 255, 255, 0) 52%, rgba(0, 0, 0, 0.18) 100%); }
+/* Destello que cruza al pasar el puntero. */
+.socials .si.app::after { content: ""; position: absolute; top: -20%; bottom: -20%; left: -60%; width: 45%; z-index: 2; pointer-events: none;
+  background: linear-gradient(100deg, transparent, rgba(255, 255, 255, 0.55), transparent); transform: skewX(-18deg); opacity: 0; }
+.socials .si.app svg { position: relative; z-index: 3; width: 22px; height: 22px; filter: drop-shadow(0 1px 1.5px rgba(0, 0, 0, 0.45)); }
+.socials .si.app:hover, .socials .si.app:focus-visible { transform: translateY(-5px) rotateX(14deg) scale(1.08);
+  box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.45), inset 0 -2px 4px rgba(0, 0, 0, 0.3), 0 2px 2px rgba(0, 0, 0, 0.35), 0 16px 26px -8px rgba(0, 0, 0, 0.7), 0 18px 38px -8px var(--glow, rgba(0, 0, 0, 0.6)); }
+.socials .si.app:hover::after, .socials .si.app:focus-visible::after { animation: siShine 0.75s ease-out; }
+@keyframes siShine { 0% { left: -60%; opacity: 0; } 20% { opacity: 1; } 100% { left: 130%; opacity: 0; } }
+.socials .si.app:active { transform: translateY(-2px) scale(0.97); }
+/* Degradados de cada marca (luz arriba, más oscuro abajo). */
+.socials .app-linkedin { --glow: rgba(10, 102, 194, 0.75); background: linear-gradient(160deg, #2a8ae6 0%, #0a66c2 48%, #004182 100%); }
+.socials .app-github { --glow: rgba(160, 170, 185, 0.45); background: linear-gradient(160deg, #4b545e 0%, #24292f 50%, #0d1117 100%); }
+.socials .app-facebook { --glow: rgba(24, 119, 242, 0.75); background: linear-gradient(160deg, #4aa3ff 0%, #1877f2 50%, #0a4fd6 100%); }
+.socials .app-instagram { --glow: rgba(214, 36, 159, 0.7); background: radial-gradient(circle at 30% 107%, #fdf497 0%, #fdf497 5%, #fd5949 45%, #d6249f 60%, #285aeb 90%); }
+.socials .app-tiktok { --glow: rgba(254, 44, 85, 0.55); background: linear-gradient(160deg, #2a2a2e 0%, #111114 50%, #000 100%); }
+.socials .app-youtube { --glow: rgba(255, 0, 0, 0.65); background: linear-gradient(160deg, #ff5a5a 0%, #ff0000 50%, #c40000 100%); }
+.socials .app-linkedin:hover, .socials .app-linkedin:focus-visible { background: linear-gradient(160deg, #2a8ae6 0%, #0a66c2 48%, #004182 100%); }
+.socials .app-github:hover, .socials .app-github:focus-visible { background: linear-gradient(160deg, #4b545e 0%, #24292f 50%, #0d1117 100%); }
+.socials .app-facebook:hover, .socials .app-facebook:focus-visible { background: linear-gradient(160deg, #4aa3ff 0%, #1877f2 50%, #0a4fd6 100%); }
+.socials .app-tiktok:hover, .socials .app-tiktok:focus-visible { background: linear-gradient(160deg, #2a2a2e 0%, #111114 50%, #000 100%); }
+.socials .app-youtube:hover, .socials .app-youtube:focus-visible { background: linear-gradient(160deg, #ff5a5a 0%, #ff0000 50%, #c40000 100%); }
+@media (max-width: 640px) { .socials { gap: 10px; } .socials .si.app { width: 42px; height: 42px; border-radius: 13px; } .socials .si.app svg { width: 20px; height: 20px; } }
+@media (prefers-reduced-motion: reduce) { .socials .si.app:hover, .socials .si.app:focus-visible { transform: translateY(-3px); } .socials .si.app:hover::after { animation: none; } }
+.socials .app-whatsapp, .socials .app-whatsapp:hover, .socials .app-whatsapp:focus-visible { --glow: rgba(37, 211, 102, 0.6); background: linear-gradient(160deg, #5af08f 0%, #25d366 48%, #128c4b 100%); }
+
+/* ---- Portada: fila de redes ordenada, «Scroll» al centro y portada compacta en pantallas bajas ---- */
+.hero .socials { flex-wrap: wrap; row-gap: 10px; }
+.hero .socials > span { flex: 0 0 auto; }
+.hero[data-side="right"] .hscroll { left: calc(50% - 60px); right: auto; }
+@media (min-width: 901px) and (max-height: 800px) {
+  .chip { margin-bottom: 14px; padding: 6px 12px; }
+  .hh { font-size: clamp(2.3rem, min(4.6vw, 9.5vh), 4.8rem); margin-bottom: 10px; }
+  .htag { margin-bottom: 12px; }
+  .hdesc { font-size: 15px; line-height: 1.55; margin-bottom: 20px; }
+  .hctas { margin-bottom: 16px; }
+  .hctas .btn { padding-top: 13px; padding-bottom: 13px; }
+  .socials .si.app { width: 40px; height: 40px; border-radius: 12px; }
+  .socials .si.app svg { width: 19px; height: 19px; }
+  .hscroll { bottom: 14px; }
+}
+@media (max-width: 900px) {
+  .hero .socials { justify-content: center; }
+  .hero .socials > span { flex-basis: 100%; text-align: center; margin: 0 0 2px; }
+}

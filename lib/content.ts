@@ -70,7 +70,7 @@ export const DEFAULT_SITE: SiteData = {
   ],
   stats: { projects: 50, clients: 30, years: 3, satisfaction: 100 },
   email: "",
-  whatsapp: "",
+  whatsapp: "593980862064",
   location: "Ecuador",
   cvUrl: "",
   socials: { linkedin: "https://www.linkedin.com/in/willian-ushi%C3%B1a", github: "https://github.com/williandavid25", facebook: "https://www.facebook.com/david.ushina.946", instagram: "https://www.instagram.com/devwill_studio", tiktok: "https://www.tiktok.com/@devwill_studio", youtube: "" },
