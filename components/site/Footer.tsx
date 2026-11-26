@@ -3,8 +3,8 @@ import Icon from "./Icon";
 import type { SiteData } from "@/lib/content";
 
 export default function Footer({ site }: { site: SiteData }) {
-  const socials = (["instagram", "tiktok", "youtube", "facebook"] as const).filter((k) => site.socials[k]);
-  const names = { instagram: "Instagram", tiktok: "TikTok", youtube: "YouTube", facebook: "Facebook" };
+  const socials = (["linkedin", "github", "facebook", "instagram", "tiktok", "youtube"] as const).filter((k) => site.socials[k]);
+  const names = { linkedin: "LinkedIn", github: "GitHub", facebook: "Facebook", instagram: "Instagram", tiktok: "TikTok", youtube: "YouTube" };
   return (
     <footer className="footer">
       <div className="container">
@@ -21,7 +21,7 @@ export default function Footer({ site }: { site: SiteData }) {
         </div>
         <div className="fbig" data-bigname aria-hidden="true">{site.name}</div>
         <div className="fbot">
-          <p>© {new Date().getFullYear()} {site.name}. Todos los derechos reservados. Hecho con <span style={{ color: "var(--acc)" }}>♥</span> en {site.location || "Ecuador"}</p>
+          <p>© {new Date().getFullYear()} {site.name}. Todos los derechos reservados{site.email ? <> · <a href={`mailto:${site.email}`} className="fmail">{site.email}</a></> : null} · Hecho con <span style={{ color: "var(--acc)" }}>♥</span> en {site.location || "Ecuador"}</p>
           <Link href="/#inicio" style={{ display: "inline-flex", gap: 8, alignItems: "center", letterSpacing: ".15em", textTransform: "uppercase", fontSize: 12 }}>Volver arriba <Icon name="up" size={14} /></Link>
         </div>
       </div>
