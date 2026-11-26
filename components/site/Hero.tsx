@@ -282,7 +282,7 @@ export default function Hero({ site, mediaUrl }: Props) {
                 <Link href="/portafolio" className="btn btn-p" data-magnetic>Ver portafolio <Icon name="arrow" className="arr" /></Link>
                 <Link href="/#contacto" className="btn btn-o" data-magnetic><Icon name="mail" />Contáctame</Link>
               </div>
-              <Socials socials={site.socials} whatsapp={site.whatsapp} label />
+              <Socials socials={site.socials} label />
             </div>
           </div>
           <div className="hfloor" />
