@@ -67,7 +67,6 @@ export default function Nav({ name, role }: { name: string; role: string }) {
             <span className="pill-ind" />
             {LINKS.map((l) => <Link key={l.id} href={l.href} data-id={l.id}>{l.label}</Link>)}
           </nav>
-          <Link href="/#contacto" className="btn btn-p btn-sm nav-cta" data-magnetic>Hablemos</Link>
           <button className="burger" aria-label="Abrir menú" onClick={() => document.body.classList.toggle("menu-open")}><span /><span /></button>
         </div>
       </header>
