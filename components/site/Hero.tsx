@@ -34,7 +34,6 @@ export default function Hero({ site, mediaUrl }: Props) {
       // Movimiento continuo: arranca cuando termina la entrada (si no, partiría desde 0).
       const loops = () => {
         gsap.fromTo(q(".hglow"), { scale: 1, opacity: 1 }, { scale: 1.08, opacity: 0.82, duration: 4, ease: "sine.inOut", yoyo: true, repeat: -1 });
-        gsap.to(q(".hbadge"), { y: -12, duration: 3, ease: "sine.inOut", yoyo: true, repeat: -1 });
       };
       const tl = gsap.timeline({ paused: true, defaults: { ease: "expo.out" }, onComplete: loops });
       tl.from(q(".hero-card"), { scale: 0.94, opacity: 0, duration: 1.5 }, 0)
@@ -270,7 +269,6 @@ export default function Hero({ site, mediaUrl }: Props) {
                     </div>
                   )}
                 </div>
-                <div className="hbadge"><b>{site.stats.years}+</b><span>años de<br />experiencia</span></div>
               </div>
             </div>
             <div className="htext">
