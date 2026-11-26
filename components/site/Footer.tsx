@@ -21,7 +21,7 @@ export default function Footer({ site }: { site: SiteData }) {
         </div>
         <div className="fbig" data-bigname aria-hidden="true">{site.name}</div>
         <div className="fbot">
-          <p>© {new Date().getFullYear()} {site.name}. Todos los derechos reservados{site.email ? <> · <a href={`mailto:${site.email}`} className="fmail">{site.email}</a></> : null} · Hecho con <span style={{ color: "var(--acc)" }}>♥</span> en {site.location || "Ecuador"}</p>
+          <p>© {new Date().getFullYear()} {site.name}. Todos los derechos reservados{site.email ? <> · <a href={`mailto:${site.email}`} className="fmail">{site.email}</a></> : null}.</p>
           <Link href="/#inicio" style={{ display: "inline-flex", gap: 8, alignItems: "center", letterSpacing: ".15em", textTransform: "uppercase", fontSize: 12 }}>Volver arriba <Icon name="up" size={14} /></Link>
         </div>
       </div>
