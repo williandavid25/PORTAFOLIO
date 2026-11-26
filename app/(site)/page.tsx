@@ -22,7 +22,7 @@ const SERVICES = [
   { icon: "playc", title: "YouTube & Streaming", text: "Edición profesional para creadores: intros, outros, thumbnails animados y motion graphics personalizados." },
   { icon: "pulse", title: "Color & Motion Graphics", text: "Gradación de color cinematográfica, animaciones tipográficas e intros dinámicas que elevan tu contenido." },
   { icon: "code", title: "Desarrollo Web", text: "Páginas web sencillas y landing pages con HTML, CSS y JavaScript, trabajadas en Visual Studio Code y versionadas en GitHub." },
-  { icon: "users", title: "Community Management", text: "Gestiono tus redes: calendario de contenido, publicaciones, respuesta a la comunidad y reporte de resultados." },
+  { icon: "users", title: "Community Management", text: "Gestiono tus redes: calendario de contenido, diseño de publicaciones en Canva, respuesta a la comunidad y reporte de resultados." },
 ];
 
 const STEPS = [
@@ -45,11 +45,11 @@ const PILLARS = [
   },
   {
     icon: "users", title: "Community Manager", lead: "Experiencia gestionando las redes sociales de marcas, de la idea al reporte.",
-    points: ["Calendario y estrategia de contenido", "Publicación y programación de posts", "Respuesta y cuidado de la comunidad", "Reporte de métricas y resultados"],
+    points: ["Calendario y estrategia de contenido", "Diseño de posts e historias en Canva", "Publicación y programación de posts", "Respuesta y cuidado de la comunidad", "Reporte de métricas y resultados"],
   },
 ];
 
-const MARQUEE = ["Edición de video", "Videos inmobiliarios", "CapCut", "Desarrollo web", "Community Manager", "Reels", "Motion Graphics", "Color Grading"];
+const MARQUEE = ["Edición de video", "Videos inmobiliarios", "CapCut", "Canva", "Desarrollo web", "Community Manager", "Reels", "Motion Graphics", "Color Grading"];
 
 export default async function HomePage() {
   const [site, projects, testimonials] = await Promise.all([getSite(), getProjects(), getTestimonials()]);
