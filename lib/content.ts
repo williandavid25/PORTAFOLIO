@@ -59,12 +59,13 @@ export const DEFAULT_SITE: SiteData = {
   heroMediaPath: "",
   heroMediaType: "",
   aboutTitle: "Edito, programo y hago crecer marcas",
-  bio: "Soy DevWilly, editor de video especializado en contenido para redes sociales, campañas publicitarias y producciones corporativas. Tengo conocimientos de programación web básica (HTML, CSS y JavaScript), trabajo con Visual Studio Code y GitHub, y con eso creo páginas sencillas y herramientas para mis proyectos. También edito en CapCut videos para asesores inmobiliarios: recorridos de propiedades, reels de captación y anuncios con precio, ubicación y subtítulos, listos para publicar y vender. Diseño en Canva las piezas para redes: posts, historias, portadas y plantillas de marca. Además tengo experiencia como community manager: planifico el contenido, publico, respondo a la comunidad y analizo los resultados para que cada publicación sume.",
+  bio: "Soy DevWilly, editor de video especializado en contenido para redes sociales, campañas publicitarias y producciones corporativas. Tengo conocimientos de programación web básica (HTML, CSS y JavaScript), trabajo con Visual Studio Code y GitHub, y con eso creo páginas sencillas y herramientas para mis proyectos. Integro la inteligencia artificial en mi edición: subtítulos automáticos, limpieza de audio, recortes inteligentes y recursos visuales generados con IA, para entregar más rápido y con mejor calidad. También edito en CapCut videos para asesores inmobiliarios: recorridos de propiedades, reels de captación y anuncios con precio, ubicación y subtítulos, listos para publicar y vender. Diseño en Canva las piezas para redes: posts, historias, portadas y plantillas de marca. Además tengo experiencia como community manager: planifico el contenido, publico, respondo a la comunidad y analizo los resultados para que cada publicación sume.",
   aboutImagePath: "",
   skills: [
     { name: "Premiere Pro", level: 95 },
     { name: "CapCut", level: 92 },
     { name: "Canva", level: 90 },
+    { name: "Edición con IA", level: 88 },
     { name: "After Effects", level: 90 },
     { name: "DaVinci Resolve", level: 85 },
     { name: "Motion Graphics", level: 80 },
@@ -76,7 +77,7 @@ export const DEFAULT_SITE: SiteData = {
   cvUrl: "",
   socials: { linkedin: "https://www.linkedin.com/in/willian-ushi%C3%B1a", github: "https://github.com/williandavid25", facebook: "https://www.facebook.com/david.ushina.946", instagram: "https://www.instagram.com/devwill_studio", tiktok: "https://www.tiktok.com/@devwill_studio", youtube: "" },
   tools: [
-    { group: "Edición de video", items: ["Premiere Pro", "CapCut", "After Effects", "DaVinci Resolve"] },
+    { group: "Edición de video", items: ["Premiere Pro", "CapCut", "After Effects", "DaVinci Resolve", "Herramientas de IA"] },
     { group: "Programación", items: ["Visual Studio Code", "Git", "GitHub", "HTML", "CSS", "JavaScript"] },
     { group: "Community Manager", items: ["Canva", "Instagram", "TikTok", "Facebook", "YouTube"] },
   ],

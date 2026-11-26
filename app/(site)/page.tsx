@@ -15,7 +15,7 @@ import { toCard } from "@/lib/cards";
 export const revalidate = 60;
 
 const SERVICES = [
-  { icon: "film", title: "Edición para Redes Sociales", text: "Reels, TikToks y Shorts diseñados para detener el scroll y maximizar el engagement de tu audiencia." },
+  { icon: "film", title: "Edición para Redes Sociales", text: "Reels, TikToks y Shorts diseñados para detener el scroll, con edición potenciada por inteligencia artificial para entregar más rápido y con mejor calidad." },
   { icon: "home", title: "Videos Inmobiliarios", text: "Edición en CapCut para asesores inmobiliarios: recorridos de propiedades, reels de captación y anuncios con precio, ubicación, subtítulos dinámicos y música que venden." },
   { icon: "video", title: "Producción Publicitaria", text: "Videos comerciales de alto impacto para campañas digitales que convierten espectadores en clientes." },
   { icon: "monitor", title: "Video Corporativo", text: "Presentaciones institucionales, videos de marca y testimonios que fortalecen la identidad de tu empresa." },
@@ -37,7 +37,7 @@ const STEPS = [
 const PILLARS = [
   {
     icon: "film", title: "Editor de video", lead: "Mi especialidad. Videos con ritmo, color y sonido cuidados para cada plataforma.",
-    points: ["Reels, TikToks y Shorts", "Videos inmobiliarios en CapCut", "Publicidad y video corporativo", "Color grading y motion graphics", "Formatos listos para cada red"],
+    points: ["Reels, TikToks y Shorts", "Edición con inteligencia artificial", "Videos inmobiliarios en CapCut", "Publicidad y video corporativo", "Color grading y motion graphics", "Formatos listos para cada red"],
   },
   {
     icon: "code", title: "Programación web", lead: "Nivel básico, enfocado en resultados prácticos para mis clientes y proyectos.",
@@ -49,7 +49,7 @@ const PILLARS = [
   },
 ];
 
-const MARQUEE = ["Edición de video", "Videos inmobiliarios", "CapCut", "Canva", "Desarrollo web", "Community Manager", "Reels", "Motion Graphics", "Color Grading"];
+const MARQUEE = ["Edición de video", "Edición con IA", "Videos inmobiliarios", "CapCut", "Canva", "Desarrollo web", "Community Manager", "Reels", "Motion Graphics", "Color Grading"];
 
 export default async function HomePage() {
   const [site, projects, testimonials] = await Promise.all([getSite(), getProjects(), getTestimonials()]);
