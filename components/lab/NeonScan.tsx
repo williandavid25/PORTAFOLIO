@@ -387,7 +387,7 @@ export default function NeonScan() {
           shape = want; shapeAt = now;
           for (let i = 0; i < N; i++) delay[i] = Math.random() * 380; // se arman una por una
           if (shape === 8) {
-            for (let i = 0; i < N; i++) delay[i] = Math.random() * 160; // todas corren al puño
+            for (let i = 0; i < N; i++) delay[i] = Math.random() * 90; // todas corren al puño, rápido
             labSfx.implode();
           } else if (from === 8) {
             // Se abre la mano: las partículas estallan desde el puño, vuelan y luego vuelven a su lugar.
@@ -502,8 +502,12 @@ export default function NeonScan() {
           handLm.forEach((h, i) => { const c = countFingers(h); if (c < worst) { worst = c; wi = i; } });
           const Q = handPts[wi];
           if (Q) {
-            tx = (Q[0].x + Q[5].x + Q[9].x + Q[13].x + Q[17].x) / 5; ty = (Q[0].y + Q[5].y + Q[9].y + Q[13].y + Q[17].y) / 5;
-            tR = Math.max(110, Math.hypot(Q[0].x - Q[9].x, Q[0].y - Q[9].y) * 1.55);
+            // Caja de TODA la mano (21 puntos): la bola cubre el puño completo.
+            let x0 = Infinity, x1 = -Infinity, y0 = Infinity, y1 = -Infinity;
+            for (const p of Q) { x0 = Math.min(x0, p.x); x1 = Math.max(x1, p.x); y0 = Math.min(y0, p.y); y1 = Math.max(y1, p.y); }
+            tx = (x0 + x1) / 2; ty = (y0 + y1) / 2;
+            // Radio visible ≈ 0.665·aR → aR = 0.95·lado mayor: la bola sobresale un poco del puño.
+            tR = Math.max(150, Math.max(x1 - x0, y1 - y0) * 0.95);
           }
         }
         if (!aInit) { ax = tx; ay = ty; aR = tR; aInit = true; }
@@ -548,7 +552,9 @@ export default function NeonScan() {
             let x = sd![i * 3], y = sd![i * 3 + 1], z = sd![i * 3 + 2];
             if (shape === 8) {
               // Bola compacta y viva dentro del puño.
-              const rr = 0.95 * Math.cbrt(phaseArr[i]) * (1 + 0.06 * Math.sin(t * 11 + i));
+              // Mitad en la superficie (se ve la forma de bola) y mitad llenando el interior.
+              const shell = i % 2 === 0;
+              const rr = 0.95 * (shell ? 0.94 + 0.06 * phaseArr[i] : Math.cbrt(phaseArr[i])) * (1 + 0.04 * Math.sin(t * 11 + i));
               x *= rr; y *= rr; z *= rr;
             }
             x *= pulse; y *= pulse; z *= pulse * 1.15;
@@ -560,7 +566,7 @@ export default function NeonScan() {
           pz[i] = Z;
           if (!inited) { px[i] = X; py[i] = Y; continue; }
           if (sinceShape >= delay[i]) {
-            const k = shape === 8 ? 0.22 : 0.13, damp = Math.pow(shape === 8 ? 0.66 : 0.74, f60);
+            const k = shape === 8 ? 0.3 : 0.13, damp = Math.pow(shape === 8 ? 0.62 : 0.74, f60);
             vx[i] = (vx[i] + (X - px[i]) * k * f60) * damp;
             vy[i] = (vy[i] + (Y - py[i]) * k * f60) * damp;
           } else { vx[i] *= 0.96; vy[i] *= 0.96; }
@@ -588,7 +594,7 @@ export default function NeonScan() {
         // Figuras compactas (plasma, bola del puño): TODAS las partículas (más densas), con brillo
         // repartido para que el color se mantenga y no se "queme" en blanco.
         const compact = shape === 8;
-        const dens = compact ? Math.min(1, Math.max(0.3, (aR * aR * 0.55) / Math.max(1, NA))) : 1;
+        const dens = compact ? Math.min(1, Math.max(0.55, (aR * aR * 0.55) / Math.max(1, NA))) : 1;
         const vs = 1;
         for (const [lo, hi, size, al] of planes) {
           const s = (size + heartGlow * 0.6) * (compact ? 0.85 : 1);

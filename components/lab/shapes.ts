@@ -26,5 +26,10 @@ export function burst(n: number) {
     const y = 1 - ((i + 0.5) / n) * 2, r = Math.sqrt(1 - y * y), th = i * GOLD;
     out[i * 3] = Math.cos(th) * r; out[i * 3 + 1] = y; out[i * 3 + 2] = Math.sin(th) * r;
   }
+  // Mezcla el orden: así cualquier cantidad de partículas (calidad automática) cubre la esfera completa.
+  for (let i = n - 1; i > 0; i--) {
+    const j = Math.floor(R() * (i + 1));
+    for (let k = 0; k < 3; k++) { const tmp = out[i * 3 + k]; out[i * 3 + k] = out[j * 3 + k]; out[j * 3 + k] = tmp; }
+  }
   return out;
 }
