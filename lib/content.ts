@@ -73,7 +73,7 @@ export const DEFAULT_SITE: SiteData = {
   whatsapp: "",
   location: "Ecuador",
   cvUrl: "",
-  socials: { linkedin: "", github: "https://github.com/williandavid25", facebook: "https://www.facebook.com/david.ushina.946", instagram: "https://www.instagram.com/devwill_studio", tiktok: "https://www.tiktok.com/@devwill_studio", youtube: "" },
+  socials: { linkedin: "https://www.linkedin.com/in/willian-ushi%C3%B1a", github: "https://github.com/williandavid25", facebook: "https://www.facebook.com/david.ushina.946", instagram: "https://www.instagram.com/devwill_studio", tiktok: "https://www.tiktok.com/@devwill_studio", youtube: "" },
   tools: [
     { group: "Edición de video", items: ["Premiere Pro", "CapCut", "After Effects", "DaVinci Resolve"] },
     { group: "Programación", items: ["Visual Studio Code", "Git", "GitHub", "HTML", "CSS", "JavaScript"] },
